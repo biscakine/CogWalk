@@ -1,0 +1,32 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="{{ participantName }}" class="title" />
+        </StackLayout>
+        <ActionItem position="right" 
+                   text="Accueil" 
+                   tap="{{ onGoHome }}" 
+                   android.systemIcon="ic_menu_home" />
+    </ActionBar>
+
+    <StackLayout class="content">
+        <Label text="Résultats des tests" class="results-header mb-2" />
+        
+        <ListView items="{{ results }}" 
+                  class="content"
+                  height="100%">
+            <ListView.itemTemplate>
+                <GridLayout columns="auto, *, *" class="results-item">
+                    <Label col="0" text="{{ 'Essai ' + tryNumber }}" class="results-text" width="60"/>
+                    <Label col="1" text="{{ 'Temps: ' + timeTaken + 's' }}" class="results-text"/>
+                    <Label col="2" text="{{ 'Erreurs: ' + errorCount }}" class="results-text"/>
+                </GridLayout>
+            </ListView.itemTemplate>
+        </ListView>
+
+        <Button text="Nouveau test" 
+                tap="{{ onNewTest }}" 
+                class="btn-gradient"/>
+    </StackLayout>
+</Page>

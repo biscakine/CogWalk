@@ -1,0 +1,37 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Configuration du test" class="title" />
+        </StackLayout>
+    </ActionBar>
+    
+    <StackLayout class="content">
+        <StackLayout class="session-item">
+            <Label text="Sélectionnez le nombre de mots" class="session-title" />
+            
+            <Label text="{{ 'Nombre de mots : ' + Math.round(wordCount) }}" 
+                   class="session-info text-center" />
+            
+            <GridLayout rows="auto, auto" columns="*" class="m-4">
+                <Slider row="0" value="{{ wordCount }}" 
+                        minValue="3" 
+                        maxValue="7" 
+                        step="1"
+                        class="m-2" />
+                
+                <GridLayout row="1" columns="*,*,*,*,*" class="mt-2">
+                    <Label text="3" col="0" class="text-center session-info" />
+                    <Label text="4" col="1" class="text-center session-info" />
+                    <Label text="5" col="2" class="text-center session-info" />
+                    <Label text="6" col="3" class="text-center session-info" />
+                    <Label text="7" col="4" class="text-center session-info" />
+                </GridLayout>
+            </GridLayout>
+
+            <Button text="Commencer le test"
+                    tap="{{ onStartTest }}"
+                    class="btn-gradient" />
+        </StackLayout>
+    </StackLayout>
+</Page>

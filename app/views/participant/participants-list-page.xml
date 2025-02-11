@@ -1,0 +1,28 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="{{ sessionName }}" class="title" />
+        </StackLayout>
+    </ActionBar>
+
+    <GridLayout rows="auto, *">
+        <Button row="0" 
+                text="Ajouter un participant" 
+                tap="{{ onAddParticipant }}" 
+                class="btn-gradient m-4"/>
+
+        <ListView row="1" 
+                  items="{{ participants }}" 
+                  class="content"
+                  height="100%"
+                  itemTap="{{ onParticipantTap }}">
+            <ListView.itemTemplate>
+                <GridLayout columns="*" class="session-item">
+                    <Label text="{{ firstName + ' ' + lastName }}" 
+                           class="session-title"/>
+                </GridLayout>
+            </ListView.itemTemplate>
+        </ListView>
+    </GridLayout>
+</Page>

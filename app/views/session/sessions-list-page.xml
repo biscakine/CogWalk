@@ -1,0 +1,32 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Sessions" class="title" />
+        </StackLayout>
+    </ActionBar>
+
+    <ListView items="{{ sessions }}" 
+              class="content"
+              height="100%"
+              itemTap="{{ onSessionTap }}">
+        <ListView.itemTemplate>
+            <GridLayout columns="*, auto" rows="auto, auto" class="session-item">
+                <Label text="{{ name }}" 
+                       row="0" 
+                       col="0" 
+                       colSpan="2"
+                       class="session-title"/>
+                <Label text="{{ 'Participants: ' + participants.length }}" 
+                       row="1" 
+                       col="0" 
+                       class="session-info"/>
+                <Button text="Export" 
+                        tap="{{ onExportTap }}" 
+                        row="1"
+                        col="1"
+                        class="export-button" />
+            </GridLayout>
+        </ListView.itemTemplate>
+    </ListView>
+</Page>

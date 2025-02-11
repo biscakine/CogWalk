@@ -1,0 +1,21 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Nouvelle Session" class="title" />
+        </StackLayout>
+    </ActionBar>
+    
+    <StackLayout class="content">
+        <Label text="Créer une nouvelle session" class="session-title" />
+        
+        <TextField hint="Nom de la session" 
+                  text="{{ sessionName }}"
+                  class="input-field" />
+        
+        <Button text="Créer"
+                tap="{{ onCreateSession }}"
+                isEnabled="{{ sessionName.length > 0 }}"
+                class="btn-gradient" />
+    </StackLayout>
+</Page>

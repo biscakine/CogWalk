@@ -1,0 +1,22 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Mémorisation" class="title" />
+        </StackLayout>
+    </ActionBar>
+    
+    <StackLayout class="content">
+        <StackLayout class="session-item">
+            <Label text="Mémorisez la phrase suivante :" class="session-title" />
+            
+            <Label text="{{ phrase }}" 
+                   textWrap="true"
+                   class="session-info text-center p-4" />
+            
+            <Button text="J'ai mémorisé"
+                    tap="{{ onPhraseMemorized }}"
+                    class="btn-gradient" />
+        </StackLayout>
+    </StackLayout>
+</Page>

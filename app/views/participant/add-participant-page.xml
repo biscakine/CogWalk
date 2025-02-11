@@ -1,0 +1,27 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Ajouter un participant" class="title" />
+        </StackLayout>
+    </ActionBar>
+    
+    <StackLayout class="content">
+        <StackLayout class="session-item">
+            <Label text="Nouveau participant" class="session-title" />
+            
+            <TextField hint="Prénom" 
+                      text="{{ firstName }}"
+                      class="input-field" />
+                      
+            <TextField hint="Nom"
+                      text="{{ lastName }}"
+                      class="input-field" />
+            
+            <Button text="Ajouter"
+                    tap="{{ onAddParticipant }}"
+                    isEnabled="{{ isValid }}"
+                    class="btn-gradient" />
+        </StackLayout>
+    </StackLayout>
+</Page>

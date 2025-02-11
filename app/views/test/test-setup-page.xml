@@ -1,0 +1,28 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="bg-cogwalk-light">
+    <ActionBar title="Configuration du test" class="bg-cogwalk-primary text-white">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+    </ActionBar>
+    
+    <StackLayout class="p-4 space-y-6">
+        <StackLayout class="bg-white p-6 rounded-2xl shadow-lg space-y-4">
+            <Label text="Sélectionnez le nombre de mots" class="text-xl font-bold text-center text-cogwalk-text" />
+            
+            <GridLayout rows="auto" columns="*,*,*,*,*" class="mb-4">
+                <Button text="3" tap="{{ selectWordCount }}" col="0"
+                        class="{{ wordCount === 3 ? 'bg-cogwalk-primary' : 'bg-cogwalk-accent' }} text-white p-4 m-1 rounded-xl" />
+                <Button text="4" tap="{{ selectWordCount }}" col="1"
+                        class="{{ wordCount === 4 ? 'bg-cogwalk-primary' : 'bg-cogwalk-accent' }} text-white p-4 m-1 rounded-xl" />
+                <Button text="5" tap="{{ selectWordCount }}" col="2"
+                        class="{{ wordCount === 5 ? 'bg-cogwalk-primary' : 'bg-cogwalk-accent' }} text-white p-4 m-1 rounded-xl" />
+                <Button text="6" tap="{{ selectWordCount }}" col="3"
+                        class="{{ wordCount === 6 ? 'bg-cogwalk-primary' : 'bg-cogwalk-accent' }} text-white p-4 m-1 rounded-xl" />
+                <Button text="7" tap="{{ selectWordCount }}" col="4"
+                        class="{{ wordCount === 7 ? 'bg-cogwalk-primary' : 'bg-cogwalk-accent' }} text-white p-4 m-1 rounded-xl" />
+            </GridLayout>
+
+            <Button text="Commencer le test"
+                    tap="{{ onStartTest }}"
+                    class="bg-cogwalk-primary text-white p-4 rounded-xl mt-4" />
+        </StackLayout>
+    </StackLayout>
+</Page>

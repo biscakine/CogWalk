@@ -1,0 +1,33 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+    <ActionBar class="header">
+        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+        <StackLayout>
+            <Label text="Détails de la session" class="title" />
+        </StackLayout>
+    </ActionBar>
+    
+    <StackLayout class="content">
+        <StackLayout class="session-item">
+            <Label text="{{ session.name }}" class="session-title" />
+            <Label text="{{ formattedDate }}" class="session-date" />
+            
+            <Button text="Exporter les résultats"
+                    tap="{{ onExportResults }}"
+                    class="btn-gradient" />
+        </StackLayout>
+
+        <Button text="Ajouter un participant"
+                tap="{{ onAddParticipant }}"
+                class="btn-gradient" />
+
+        <ListView items="{{ session.participants }}" 
+                  class="session-list"
+                  itemTap="{{ onParticipantTap }}">
+            <ListView.itemTemplate>
+                <StackLayout class="session-item">
+                    <Label text="{{ firstName + ' ' + lastName }}" class="session-title" />
+                </StackLayout>
+            </ListView.itemTemplate>
+        </ListView>
+    </StackLayout>
+</Page>

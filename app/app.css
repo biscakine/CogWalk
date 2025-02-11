@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom color variables */
+.dark-teal {
+    color: #1a3b3b;
+}
+
+.turquoise {
+    color: #40e0d0;
+}
+
+/* Page styles */
+.page {
+    background-color: #f5f5f5;
+}
+
+/* Header styles */
+.header {
+    background: linear-gradient(135deg, #1a3b3b, #40e0d0);
+    padding: 12 16;
+}
+
+/* Special header for home page */
+.home-header {
+    background: linear-gradient(135deg, #1a3b3b, #40e0d0);
+    padding: 12 16;
+}
+
+.home-header .title {
+    color: #ffffff;
+    font-size: 28;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation bar styles */
+.navigation-bar {
+    background-color: #1a3b3b;
+    color: white;
+}
+
+.navigation-button {
+    color: white;
+    font-size: 18;
+}
+
+.action-bar {
+    background-color: #1a3b3b;
+}
+
+.action-bar Label {
+    color: white;
+    font-size: 20;
+    font-weight: bold;
+}
+
+/* Regular header for other pages */
+.header .title {
+    color: #1a3b3b;
+    font-size: 24;
+    font-weight: bold;
+    margin: 0;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 8 16;
+    border-radius: 8;
+}
+
+.logo {
+    horizontal-align: center;
+}
+
+.subtitle {
+    color: #1a3b3b;
+    font-size: 18;
+    opacity: 0.9;
+    margin: 8 20;
+    text-align: center;
+}
+
+/* Content styles */
+.content {
+    padding: 16;
+}
+
+.session-list {
+    margin-top: 16;
+}
+
+.session-item {
+    background-color: white;
+    border-radius: 12;
+    margin: 6 8;
+    padding: 16;
+    elevation: 2;
+}
+
+.session-title {
+    color: #1a3b3b;
+    font-size: 22;
+    font-weight: bold;
+    margin-bottom: 4;
+}
+
+.session-date {
+    color: #666;
+    font-size: 16;
+    margin-top: 4;
+}
+
+.session-info {
+    color: #666;
+    font-size: 16;
+    margin-top: 4;
+}
+
+/* Export button style */
+.export-button {
+    background: linear-gradient(to right, #1a3b3b, #40e0d0);
+    color: white;
+    border-radius: 16;
+    padding: 8 16;
+    font-size: 14;
+    font-weight: 500;
+    min-width: 80;
+    margin-left: 8;
+}
+
+/* Results page specific styles */
+.results-header {
+    color: #1a3b3b;
+    font-size: 18;
+    font-weight: bold;
+    text-align: center;
+}
+
+.results-item {
+    background-color: white;
+    border-radius: 8;
+    margin: 4 6;
+    padding: 12;
+    elevation: 2;
+}
+
+.results-text {
+    color: #1a3b3b;
+    font-size: 14;
+    font-weight: 500;
+}
+
+/* Button styles */
+.btn-gradient {
+    background: linear-gradient(to right, #1a3b3b, #40e0d0);
+    color: white;
+    border-radius: 25;
+    padding: 16 24;
+    margin: 8 16;
+    elevation: 3;
+    font-size: 18;
+    font-weight: 500;
+    width: 85%;
+    horizontal-align: center;
+}
+
+.btn-gradient:active {
+    opacity: 0.9;
+    elevation: 1;
+}
+
+/* Input styles */
+.input-field {
+    border-radius: 20;
+    border-width: 1;
+    border-color: #e5e7eb;
+    padding: 14;
+    margin: 8 16;
+    background-color: white;
+    font-size: 18;
+    width: 85%;
+    horizontal-align: center;
+}
+
+/* Footer styles */
+.footer {
+    background-color: #1a3b3b;
+    padding: 16;
+}
+
+.version {
+    color: #40e0d0;
+    font-size: 16;
+    text-align: center;
+}
+
+.developer {
+    color: white;
+    font-size: 14;
+    opacity: 0.8;
+    text-align: center;
+}

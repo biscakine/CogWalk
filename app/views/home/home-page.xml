@@ -1,0 +1,33 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo">
+    <GridLayout rows="auto, *, auto" class="page">
+        <!-- Header -->
+        <StackLayout row="0" class="home-header p-4">
+            <Image src="~/DALL·E 2025-01-31 16.22.27 - Minimalist logo for a mobile application that tests dual-task walking. The design should have smooth, rounded edges and a clean, modern look. The logo.webp" 
+                   width="80" 
+                   height="80" 
+                   class="logo"
+                   stretch="aspectFit"/>
+            <Label text="CogWalk" 
+                   class="title text-center"/>
+            <Label text="Bienvenue dans votre application de double tâche à la marche" 
+                   class="subtitle text-center" 
+                   textWrap="true"/>
+        </StackLayout>
+
+        <!-- Main Buttons -->
+        <StackLayout row="1" class="content p-4">
+            <Button text="Nouvelle Session" 
+                    tap="{{ onCreateSession }}" 
+                    class="btn-gradient"/>
+            <Button text="Sessions" 
+                    tap="{{ onViewSessions }}" 
+                    class="btn-gradient"/>
+        </StackLayout>
+
+        <!-- Footer -->
+        <StackLayout row="2" class="footer p-4">
+            <Label text="Version 1.0.0" class="version text-center"/>
+            <Label text="Développé par Jérôme Riera" class="developer text-center"/>
+        </StackLayout>
+    </GridLayout>
+</Page>
