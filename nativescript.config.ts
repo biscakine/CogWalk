@@ -10,9 +10,5 @@ export default {
   },
   webpackConfigPath: 'webpack.config.js',
   useLibs: true,
-  preview: {
-    // Disable service worker in preview mode
-    serviceWorker: false,
-    hmr: false
-  }
+  previewAppSchema: 'ns-preview'
 } as NativeScriptConfig;

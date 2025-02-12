@@ -200,3 +200,11 @@
     opacity: 0.8;
     text-align: center;
 }
+
+.license {
+    color: white;
+    font-size: 12;
+    opacity: 0.7;
+    text-align: center;
+    margin-top: 4;
+}

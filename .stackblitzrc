@@ -1,6 +1,6 @@
 {
-  "installDependencies": false,
-  "startCommand": "ns preview --no-hmr",
+  "installDependencies": true,
+  "startCommand": "ns preview",
   "env": {
     "NODE_OPTIONS": "--max-old-space-size=4096"
   }
