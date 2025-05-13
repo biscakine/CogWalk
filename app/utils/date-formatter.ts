@@ -1,5 +1,5 @@
 // app/utils/date-formatter.ts
-import { formatDate } from '@nativescript/core/datetime';
+import { formatDate } from '@nativescript/core';
 
 export function formatFrenchDateTime(date: Date): string {
   // Ex. : « 13/05/2025 19 h 42 »
