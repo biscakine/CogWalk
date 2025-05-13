@@ -1,101 +1,44 @@
-import { Email, compose } from '@nativescript/email';
-import { TestResult } from '../models/test-result.model';
-import { Session } from '../models/session.model';
-import { File, Folder, knownFolders, path } from '@nativescript/core';
+// app/services/email.service.ts
+import { compose, AvailableComposeOptions } from '@nativescript/email';
+import { knownFolders, path, File }           from '@nativescript/core';
+import { Session }     from '../models/session.model';
+import { TestResult }  from '../models/test-result.model';
 
-export class EmailService {
-    private static instance: EmailService;
-    private readonly recipientEmail = 'jerome.riera@univ-st-etienne.fr';
+/** Construit et envoie le mail avec un CSV en pièce jointe. */
+export async function sendResultsMailCSV(
+  session: Session,
+  results: TestResult[]
+): Promise<boolean> {
 
-    private constructor() {}
+  // 1. Générer le contenu CSV
+  const csv = buildCsv(results);
 
-    static getInstance(): EmailService {
-        if (!EmailService.instance) {
-            EmailService.instance = new EmailService();
-        }
-        return EmailService.instance;
-    }
+  // 2. Créer un fichier temporaire dans le dossier documents
+  const documents = knownFolders.documents();
+  const fileName  = `results-${session.id}.csv`;
+  const filePath  = path.join(documents.path, fileName);
+  const file      = File.fromPath(filePath);
+  file.writeTextSync(csv);
 
-    async sendSessionResults(session: Session, results: TestResult[]) {
-        try {
-            // Generate CSV content
-            const csvContent = this.generateCSV(results);
+  // 3. Préparer les options pour 'compose'
+  const options: AvailableComposeOptions = {
+    subject: `Résultats – ${session.name}`,
+    body:    `Veuillez trouver ci-joint les résultats au format CSV.`,
+    to:      ['destinataire@example.com'],
+    attachments: [filePath]             // ← pièce jointe CSV
+  };
 
-            // Create temporary file
-            const tempFolder = knownFolders.temp();
-            const fileName = `session_${session.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().getTime()}.csv`;
-            const filePath = path.join(tempFolder.path, fileName);
-            const file = File.fromPath(filePath);
-            await file.writeText(csvContent);
+  // 4. Ouvrir le composer natif ; renvoie true si l’utilisateur a envoyé le mail
+  return await compose(options);
+}
 
-            // Compose email with attachment
-            await compose({
-                subject: `Résultats de la session: ${session.name}`,
-                to: [this.recipientEmail],
-                body: `Résultats de la session "${session.name}" du ${new Date(session.date).toLocaleDateString('fr-FR')}`,
-                attachments: [{
-                    fileName: fileName,
-                    path: filePath,
-                    mimeType: 'text/csv'
-                }]
-            });
-
-            // Clean up temporary file
-            if (File.exists(filePath)) {
-                File.fromPath(filePath).remove();
-            }
-
-        } catch (error) {
-            console.error('Error in sendSessionResults:', error);
-            throw error;
-        }
-    }
-
-    private generateCSV(results: TestResult[]): string {
-        try {
-            const headers = [
-                'ID Participant',
-                'Prénom',
-                'Nom',
-                'Texte Original',
-                'Texte Saisi',
-                'Nombre de Mots',
-                'Temps (secondes)',
-                'Nombre d\'erreurs',
-                'Date du Test'
-            ].join('\t');
-
-            const rows = results.map(result => {
-                if (!result || !result.participantId) return null;
-                
-                const [firstName, lastName] = result.participantId.split('_');
-                return [
-                    result.participantId,
-                    this.escapeCSV(firstName),
-                    this.escapeCSV(lastName),
-                    this.escapeCSV(result.originalText),
-                    this.escapeCSV(result.userInput),
-                    result.wordCount,
-                    result.timeTaken,
-                    result.errorCount,
-                    new Date(result.timestamp).toLocaleString('fr-FR')
-                ].join('\t');
-            }).filter(row => row !== null);
-
-            if (rows.length === 0) {
-                throw new Error('Aucune donnée valide à exporter');
-            }
-
-            return [headers, ...rows].join('\n');
-        } catch (error) {
-            console.error('Error generating CSV:', error);
-            throw new Error('Erreur lors de la génération du fichier CSV');
-        }
-    }
-
-    private escapeCSV(str: string): string {
-        if (!str) return '';
-        // Remove tabs and newlines
-        return str.replace(/[\t\n\r]/g, ' ').trim();
-    }
+/** Convertit un tableau de résultats en CSV */
+function buildCsv(results: TestResult[]): string {
+  // En-tête
+  const header = ['participantId', 'score', 'date'].join(',');
+  // Lignes
+  const lines = results.map(r =>
+    [r.participantId, r.score, r.date.toISOString()].join(',')
+  );
+  return [header, ...lines].join('\n');
 }
