@@ -62,6 +62,6 @@ jobs:
     # ──────────────── 9. Publie dans GitHub Releases ───────────
     - uses: softprops/action-gh-release@v2
       with:
-        files: cogwalk-${{ github.ref_name }}.apk
+         files: cogwalk-${{ github.ref_name }}.apk
       env:
-        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+         GITHUB_TOKEN: ${{ secrets.GH_PAT }}   # PAT classic scope repo
