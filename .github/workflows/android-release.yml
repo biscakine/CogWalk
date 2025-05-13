@@ -26,6 +26,7 @@ jobs:
           platform-tools
           platforms;android-33
           build-tools;33.0.2
+          tools
 
     # ── 4. Vars d’environnement pour NativeScript & Gradle ──
     - run: |
