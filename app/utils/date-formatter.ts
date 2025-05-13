@@ -1,12 +1,12 @@
 // app/utils/date-formatter.ts
-import { formatDate } from '@nativescript/core';
-
 export function formatFrenchDateTime(date: Date): string {
-  // Ex. : « 13/05/2025 19 h 42 »
-  return formatDate(
-    date,
-    'dd/MM/yyyy HH:mm',
-    'fr-FR',      // locale
-    'Europe/Paris'
-  );
+  const fmt = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return fmt.format(date);
 }
