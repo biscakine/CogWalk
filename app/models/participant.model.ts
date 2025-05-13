@@ -1,6 +1,7 @@
 export interface Participant {
-  id: string;
+  id: string;          // identifiant unique (uuid, email…)
   firstName: string;
   lastName: string;
-  createdAt: Date;
+  age?: number;        // facultatif
+  // Ajoutez ici tout champ nécessaire (score, rôle, etc.)
 }
