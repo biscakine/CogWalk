@@ -5,9 +5,9 @@ export default {
   appPath: 'app',
   appResourcesPath: '../../tools/assets/App_Resources',
   android: {
-    compileSdk: 33,   // ← NOUVEAU
-    minSdk: 21,       // (ou 22 si vous préférez)
-    targetSdk: 33,    // ← cohérent
+    compileSdk: 33,
+    targetSdk: 33,
+    minSdk: 21,
     v8Flags: '--expose_gc',
     markingMode: 'none'
   },
