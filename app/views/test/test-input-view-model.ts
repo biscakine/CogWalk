@@ -1,10 +1,11 @@
 //------------------------------------------------------------
-// app/views/test/test-input-view-model.ts
-// ViewModel complet ALIGNÉ avec test-input-page.xml
+// app/views/test/test-input-view-model.ts (révisé)
+// ViewModel entièrement aligné avec TestService & TestResult model
 //------------------------------------------------------------
 
 import { Observable, Frame } from '@nativescript/core';
 import { TestService } from '../../services/test.service';
+import { TestResult } from '../../models/test-result.model';
 
 // Contexte transmis via navigation (participant, session, phrase à mémoriser…)
 export interface TestInputContext {
@@ -12,16 +13,6 @@ export interface TestInputContext {
   sessionId?: string;
   /** Phrase d’origine que l’utilisateur devait retenir */
   originalPhrase?: string;
-}
-
-// Modèle minimal qu’on stocke via TestService
-export interface TestResult {
-  participantId?: string;
-  sessionId?: string;
-  originalPhrase?: string;
-  userInput: string;
-  duration: number;     // secondes
-  errorCount: number;
 }
 
 export class TestInputViewModel extends Observable {
@@ -84,15 +75,21 @@ export class TestInputViewModel extends Observable {
     const original = this.ctx.originalPhrase ?? '';
     this.errorCount = TestService.getInstance().calculateErrors(original, this.userInput);
 
-    // 2) Persistance
+    // 2) Persistance (alignée sur TestResult model)
+    const wordCount = original.split(' ').filter(Boolean).length;
+
     const result: TestResult = {
+      id: Date.now().toString(),   // identifiant simple – à ajuster si besoin
       participantId: this.ctx.participantId,
       sessionId: this.ctx.sessionId,
-      originalPhrase: original,
+      originalText: original,
       userInput: this.userInput,
-      duration: this.timeTaken,
-      errorCount: this.errorCount
-    };
+      wordCount,
+      timeTaken: this.timeTaken,
+      errorCount: this.errorCount,
+      createdAt: new Date()
+    } as TestResult;
+
     TestService.getInstance().addResult(result);
 
     // 3) Afficher la section Résultats
