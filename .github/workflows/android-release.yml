@@ -13,6 +13,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Java JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 10406996
+          build-tools-version: 34.0.0
+          ndk-version: 25.2.9519653
+          platform-version: 34
+          accept-licenses: true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
