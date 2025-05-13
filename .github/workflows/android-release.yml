@@ -13,11 +13,12 @@ jobs:
     - uses: actions/checkout@v4
 
     # 1. JDK 17 – requis par les command-line tools 16.0
-    - name: Setup JDK 17
-      uses: actions/setup-java@v4
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
       with:
-        distribution: temurin
-        java-version: '17'
+        # une SEULE ligne :
+        packages: 'platform-tools "platforms;android-34" "build-tools;34.0.0"'
+
 
     # 2. SDK Android complet (plate-forme + build-tools)
     - name: Setup Android SDK
