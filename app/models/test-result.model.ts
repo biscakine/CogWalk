@@ -7,4 +7,6 @@ export interface TestResult {
   timeTaken: number;
   errorCount: number;
   timestamp: Date;
+  date: Date;
+  score: number;
 }
