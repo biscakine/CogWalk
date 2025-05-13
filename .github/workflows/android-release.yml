@@ -3,7 +3,7 @@ name: Android APK Release
 on:
   push:
     tags:
-      - 'v*'          # déclenchement sur chaque tag v1.0.0, v1.0.1, …
+      - 'v*'            # déclenché sur v1.0.0, v1.0.1…
 
 jobs:
   build:
@@ -12,35 +12,33 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. JDK pour Gradle/NativeScript
-    - name: Setup JDK 11
+    # 1. JDK 17 – requis par les command-line tools 16.0
+    - name: Setup JDK 17
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: '11'
+        java-version: '17'
 
-    # 2. SDK Android complet — on ajoute explicitement les paquets requis
+    # 2. SDK Android complet (plate-forme + build-tools)
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        # plate-forme API 34 + build-tools 34 + ndk facultatif
         packages: |
           platform-tools
           platforms;android-34
           build-tools;34.0.0
 
-    # 3. Rendez $ANDROID_HOME visible pour NativeScript
-    - name: Export ANDROID_HOME
-      run: echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+    # 3. ANDROID_HOME pour NativeScript
+    - run: echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
-    # 4. Node & NativeScript CLI
+    # 4. Node + NativeScript CLI
     - uses: actions/setup-node@v4
       with:
         node-version: '18'
     - run: npm install -g nativescript
-    - run: npm ci          # installe les dépendances de l’app
+    - run: npm ci          # dépendances du projet
 
-    # 5. Décode le keystore (déjà mis en secret)
+    # 5. Décodage du keystore stocké en secret
     - run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > cogwalk-release-key.jks
 
