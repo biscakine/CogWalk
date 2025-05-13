@@ -1,55 +1,64 @@
 //------------------------------------------------------------
 // app/views/test/test-input-view-model.ts
-// ViewModel for the test‑input screen
-// – Manages a stopwatch (seconds)
-// – Persists the result (method‑agnostic) & navigates away when finished
+// ViewModel complet ALIGNÉ avec test-input-page.xml
 //------------------------------------------------------------
 
-import { Observable } from '@nativescript/core';
-import { Frame } from '@nativescript/core';
+import { Observable, Frame } from '@nativescript/core';
 import { TestService } from '../../services/test.service';
 
-// Navigation context optionally provided by the page
+// Contexte transmis via navigation (participant, session, phrase à mémoriser…)
 export interface TestInputContext {
   participantId?: string;
   sessionId?: string;
+  /** Phrase d’origine que l’utilisateur devait retenir */
+  originalPhrase?: string;
 }
 
-// Shape of the object we try to persist
-interface TestResult {
+// Modèle minimal qu’on stocke via TestService
+export interface TestResult {
   participantId?: string;
   sessionId?: string;
-  duration: number;   // seconds
+  originalPhrase?: string;
+  userInput: string;
+  duration: number;     // secondes
+  errorCount: number;
 }
 
 export class TestInputViewModel extends Observable {
+  // ───────────── CHRONO ─────────────
   private startTime = 0;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
-  private _timer = '0';   // bindable string value shown in the view
+  private _timer = '0';            // bindé dans la vue
+
+  // ───────────── DONNÉES DE FORMULAIRE / RÉSULTATS ─────────────
+  public userInput = '';
+  public showResults = false;
+  public timeTaken = 0;
+  public errorCount = 0;
 
   constructor(private ctx: TestInputContext = {}) {
     super();
+    this.startTimer();   // on démarre dès l’arrivée sur la page
   }
 
-  // ───────────── PROPERTIES (bindable) ─────────────
+  // ───────────── PROPRIÉTÉ BINDABLE ─────────────
   get timer(): string {
     return this._timer;
   }
 
-  // ───────────── STOPWATCH CONTROL ────────────────
-  /** Starts (or restarts) the stopwatch. */
-  public startTimer(): void {
-    this.stopTimer();          // reset if already running
-    this.startTime = Date.now();
+  // ───────────── GESTION DU CHRONO ─────────────
+  private tick = () => {
+    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+    this._timer = elapsed.toString();
+    this.notifyPropertyChange('timer', this._timer);
+  };
 
-    this.timerInterval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-      this._timer = elapsed.toString();
-      this.notifyPropertyChange('timer', this._timer);
-    }, 1000);
+  public startTimer(): void {
+    this.stopTimer();
+    this.startTime = Date.now();
+    this.timerInterval = setInterval(this.tick, 1_000);
   }
 
-  /** Stops the stopwatch and freezes the final value. */
   public stopTimer(): void {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -57,48 +66,60 @@ export class TestInputViewModel extends Observable {
     }
   }
 
-  /** Call from `onNavigatingFrom` / `dispose` (Angular) to clean up. */
   public dispose(): void {
     this.stopTimer();
   }
 
-  // ───────────── UTILITIES ────────────────────────
-  public getElapsedSeconds(): number {
+  private getElapsedSeconds(): number {
     return parseInt(this._timer, 10);
   }
 
-  // ───────────── END‑OF‑TEST HANDLER ──────────────
-  /** Stops the chrono, attempts to persist the result (method name‑agnostic) and navigates home. */
-  public async finishTest(): Promise<void> {
-    // 1) Stop chrono
+  // ───────────── HANDLERS DECLARÉS DANS LE XML ─────────────
+  /** Clic sur « Terminé » */
+  public onFinishTest(): void {
+    // 1) Arrêt du chrono & métriques
     this.stopTimer();
+    this.timeTaken = this.getElapsedSeconds();
 
-    // 2) Build the result object
+    const original = this.ctx.originalPhrase ?? '';
+    this.errorCount = TestService.getInstance().calculateErrors(original, this.userInput);
+
+    // 2) Persistance
     const result: TestResult = {
       participantId: this.ctx.participantId,
-      sessionId:     this.ctx.sessionId,
-      duration:      this.getElapsedSeconds()
+      sessionId: this.ctx.sessionId,
+      originalPhrase: original,
+      userInput: this.userInput,
+      duration: this.timeTaken,
+      errorCount: this.errorCount
     };
+    TestService.getInstance().addResult(result);
 
-    // 3) Try to persist — stay permissive on the method name to avoid TS compile errors
-    try {
-      const svc: any = TestService.getInstance();
-      if (svc) {
-        if (typeof svc.saveResult === 'function') {
-          await svc.saveResult(result);
-        } else if (typeof svc.addResult === 'function') {
-          await svc.addResult(result);
-        } else if (typeof svc.recordResult === 'function') {
-          await svc.recordResult(result);
-        }
-        // If none of the above exist we silently skip — developers can adjust.
-      }
-    } catch (err) {
-      // Log but don’t block navigation.
-      console.error('[TestInputViewModel] Failed to persist result', err);
-    }
+    // 3) Afficher la section Résultats
+    this.showResults = true;
+    this.notifyPropertyChange('showResults', this.showResults);
+    this.notifyPropertyChange('timeTaken', this.timeTaken);
+    this.notifyPropertyChange('errorCount', this.errorCount);
+  }
 
-    // 4) Navigate back to the home (or any other target)
+  /** Clic sur « Nouvel essai » */
+  public onNewTry(): void {
+    // Réinitialise l’état pour un nouveau test
+    this.userInput = '';
+    this.notifyPropertyChange('userInput', this.userInput);
+
+    this._timer = '0';
+    this.notifyPropertyChange('timer', this._timer);
+
+    this.showResults = false;
+    this.notifyPropertyChange('showResults', this.showResults);
+
+    this.startTimer();
+  }
+
+  /** Clic sur « Terminer le test » */
+  public onFinishSession(): void {
+    // Retour (ou navigation) à l’écran d’accueil
     Frame.topmost().navigate({
       moduleName: 'views/home/home-page',
       clearHistory: true,
