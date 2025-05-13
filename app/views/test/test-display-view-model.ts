@@ -7,13 +7,13 @@ export class TestDisplayViewModel extends BaseViewModel {
     private _phrase: string = '';
     private participant: any;
 
-    constructor(context: { wordCount: number, participant: any }) {
+    constructor(context: { participant: any }) {
         super();
         this.phrasesService = new PhrasesService();
         this.participant = context.participant;
         
         try {
-            this._phrase = this.phrasesService.getRandomPhrase(context.wordCount);
+            this._phrase = this.phrasesService.getRandomPhrase();
             this.notifyPropertyChange('phrase', this._phrase);
         } catch (error) {
             console.error('Error getting random phrase:', error);

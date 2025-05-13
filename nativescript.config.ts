@@ -10,5 +10,8 @@ export default {
   },
   webpackConfigPath: 'webpack.config.js',
   useLibs: true,
-  previewAppSchema: 'ns-preview'
+  previewAppSchema: 'ns-preview',
+  preview: {
+    port: 3000
+  }
 } as NativeScriptConfig;

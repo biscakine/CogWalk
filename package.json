@@ -21,6 +21,8 @@
   "scripts": {
     "preview": "ns preview",
     "android": "ns run android",
-    "ios": "ns run ios"
+    "ios": "ns run ios",
+    "build": "ns build",
+    "clean": "ns clean"
   }
 }
