@@ -1,27 +1,27 @@
 //------------------------------------------------------------
-// app/views/test/test-input-view-model.ts (révisé)
-// ViewModel entièrement aligné avec TestService & TestResult model
+// app/views/test/test-input-view-model.ts
+// ViewModel aligné avec TestResult — score = nombre d’erreurs brut
 //------------------------------------------------------------
 
 import { Observable, Frame } from '@nativescript/core';
 import { TestService } from '../../services/test.service';
 import { TestResult } from '../../models/test-result.model';
 
-// Contexte transmis via navigation (participant, session, phrase à mémoriser…)
+// Contexte transmis à la page via navigation
 export interface TestInputContext {
   participantId?: string;
   sessionId?: string;
-  /** Phrase d’origine que l’utilisateur devait retenir */
+  /** Phrase que le participant devait mémoriser */
   originalPhrase?: string;
 }
 
 export class TestInputViewModel extends Observable {
-  // ───────────── CHRONO ─────────────
+  // ───────────── CHRONOMÈTRE ─────────────
   private startTime = 0;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private _timer = '0';            // bindé dans la vue
 
-  // ───────────── DONNÉES DE FORMULAIRE / RÉSULTATS ─────────────
+  // ───────────── ÉTAT DU FORMULAIRE / RÉSULTATS ─────────────
   public userInput = '';
   public showResults = false;
   public timeTaken = 0;
@@ -29,7 +29,7 @@ export class TestInputViewModel extends Observable {
 
   constructor(private ctx: TestInputContext = {}) {
     super();
-    this.startTimer();   // on démarre dès l’arrivée sur la page
+    this.startTimer();   // Lancement immédiat à l’arrivée sur la page
   }
 
   // ───────────── PROPRIÉTÉ BINDABLE ─────────────
@@ -44,13 +44,13 @@ export class TestInputViewModel extends Observable {
     this.notifyPropertyChange('timer', this._timer);
   };
 
-  public startTimer(): void {
+  private startTimer(): void {
     this.stopTimer();
     this.startTime = Date.now();
     this.timerInterval = setInterval(this.tick, 1_000);
   }
 
-  public stopTimer(): void {
+  private stopTimer(): void {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
@@ -65,48 +65,57 @@ export class TestInputViewModel extends Observable {
     return parseInt(this._timer, 10);
   }
 
-  // ───────────── HANDLERS DECLARÉS DANS LE XML ─────────────
-  /** Clic sur « Terminé » */
+  // ───────────── HANDLERS DÉCLARÉS DANS LE XML ─────────────
+  /** Clic sur « Terminé » */
   public onFinishTest(): void {
-    // 1) Arrêt du chrono & métriques
+    // 1) Arrêt du chrono & calculs
     this.stopTimer();
     this.timeTaken = this.getElapsedSeconds();
 
     const original = this.ctx.originalPhrase ?? '';
     this.errorCount = TestService.getInstance().calculateErrors(original, this.userInput);
 
-    // 2) Persistance (alignée sur TestResult model)
+    // 2) Construction du résultat complet conforme à TestResult
     const wordCount = original.split(' ').filter(Boolean).length;
+    const now = new Date();
+
+    // Le score est le **nombre brut d’erreurs**
+    const score = this.errorCount;
 
     const result: TestResult = {
-      id: Date.now().toString(),   // identifiant simple – à ajuster si besoin
-      participantId: this.ctx.participantId,
-      sessionId: this.ctx.sessionId,
+      id: Date.now().toString(),
+      participantId: this.ctx.participantId ?? '',
       originalText: original,
       userInput: this.userInput,
       wordCount,
       timeTaken: this.timeTaken,
       errorCount: this.errorCount,
-      createdAt: new Date()
-    } as TestResult;
+      timestamp: now,
+      date: now,
+      score
+    };
 
     TestService.getInstance().addResult(result);
 
-    // 3) Afficher la section Résultats
+    // 3) Mise à jour de l’UI pour afficher la section Résultats
     this.showResults = true;
     this.notifyPropertyChange('showResults', this.showResults);
     this.notifyPropertyChange('timeTaken', this.timeTaken);
     this.notifyPropertyChange('errorCount', this.errorCount);
   }
 
-  /** Clic sur « Nouvel essai » */
+  /** Clic sur « Nouvel essai » */
   public onNewTry(): void {
-    // Réinitialise l’état pour un nouveau test
     this.userInput = '';
     this.notifyPropertyChange('userInput', this.userInput);
 
     this._timer = '0';
     this.notifyPropertyChange('timer', this._timer);
+
+    this.errorCount = 0;
+    this.timeTaken = 0;
+    this.notifyPropertyChange('errorCount', this.errorCount);
+    this.notifyPropertyChange('timeTaken', this.timeTaken);
 
     this.showResults = false;
     this.notifyPropertyChange('showResults', this.showResults);
@@ -114,9 +123,8 @@ export class TestInputViewModel extends Observable {
     this.startTimer();
   }
 
-  /** Clic sur « Terminer le test » */
+  /** Clic sur « Terminer le test » */
   public onFinishSession(): void {
-    // Retour (ou navigation) à l’écran d’accueil
     Frame.topmost().navigate({
       moduleName: 'views/home/home-page',
       clearHistory: true,
