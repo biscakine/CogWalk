@@ -1,0 +1,49 @@
+name: Android APK Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install NativeScript CLI
+        run: npm install -g nativescript
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > cogwalk-release-key.jks
+
+      - name: Build APK with NativeScript
+        run: |
+          ns build android \
+            --release \
+            --key-store-path cogwalk-release-key.jks \
+            --key-store-password "${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-store-alias "${{ secrets.KEY_ALIAS }}" \
+            --key-store-alias-password "${{ secrets.KEY_PASSWORD }}"
+
+      - name: Rename APK
+        run: |
+          mv platforms/android/app/build/outputs/apk/release/app-release.apk cogwalk-${{ github.ref_name }}.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cogwalk-${{ github.ref_name }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
