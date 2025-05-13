@@ -1,44 +1,63 @@
 // app/services/email.service.ts
-import { compose, AvailableComposeOptions } from '@nativescript/email';
-import { knownFolders, path, File }           from '@nativescript/core';
+//------------------------------------------------------------
+// Service d’envoi d’e-mails avec pièce jointe CSV
+//------------------------------------------------------------
+import { compose, ComposeOptions } from '@nativescript/email';
+import { knownFolders, path, File } from '@nativescript/core';
 import { Session }     from '../models/session.model';
 import { TestResult }  from '../models/test-result.model';
 
-/** Construit et envoie le mail avec un CSV en pièce jointe. */
-export async function sendResultsMailCSV(
-  session: Session,
-  results: TestResult[]
-): Promise<boolean> {
+export class EmailService {
+  /**
+   * Construit un CSV à partir des résultats et ouvre le compositeur d’e-mail.
+   * @returns true si l’utilisateur a effectivement envoyé le courriel.
+   */
+  static async sendResultsMailCSV(
+    session: Session,
+    results: TestResult[],
+    recipient = 'destinataire@example.com'
+  ): Promise<boolean> {
+    // 1. Générer le texte CSV
+    const csvContent = buildCsv(results);
 
-  // 1. Générer le contenu CSV
-  const csv = buildCsv(results);
+    // 2. Écrire le fichier dans Documents/
+    const documents = knownFolders.documents();
+    const fileName  = `results-${session.id}.csv`;
+    const filePath  = path.join(documents.path, fileName);
+    const csvFile   = File.fromPath(filePath);
+    csvFile.writeTextSync(csvContent);
 
-  // 2. Créer un fichier temporaire dans le dossier documents
-  const documents = knownFolders.documents();
-  const fileName  = `results-${session.id}.csv`;
-  const filePath  = path.join(documents.path, fileName);
-  const file      = File.fromPath(filePath);
-  file.writeTextSync(csv);
+    // 3. Préparer les options du compositeur natif
+    const options: ComposeOptions = {
+      subject: `Résultats – ${session.name}`,
+      body:    `Veuillez trouver ci-joint les résultats au format CSV.`,
+      to:      [recipient],
+      attachments: [filePath],   // chemin absolu vers le CSV
+      // iOS : si vous voulez forcer le MIME :
+      // attachments: [{ path: filePath, fileName, mimeType: 'text/csv' }]
+    };
 
-  // 3. Préparer les options pour 'compose'
-  const options: AvailableComposeOptions = {
-    subject: `Résultats – ${session.name}`,
-    body:    `Veuillez trouver ci-joint les résultats au format CSV.`,
-    to:      ['destinataire@example.com'],
-    attachments: [filePath]             // ← pièce jointe CSV
-  };
-
-  // 4. Ouvrir le composer natif ; renvoie true si l’utilisateur a envoyé le mail
-  return await compose(options);
+    try {
+      const sent = await compose(options);
+      return sent;               // true si l’utilisateur appuie sur « Envoyer »
+    } finally {
+      // (Facultatif) Nettoyer le fichier temporaire
+      // await csvFile.remove();
+    }
+  }
 }
 
-/** Convertit un tableau de résultats en CSV */
+/**
+ * Convertit un tableau de TestResult en chaîne CSV.
+ * @example
+ * participantId,score,date
+ * p1,87,2025-05-13T18:05:42.123Z
+ */
 function buildCsv(results: TestResult[]): string {
-  // En-tête
   const header = ['participantId', 'score', 'date'].join(',');
-  // Lignes
-  const lines = results.map(r =>
+  const lines  = results.map(r =>
     [r.participantId, r.score, r.date.toISOString()].join(',')
   );
   return [header, ...lines].join('\n');
 }
+
