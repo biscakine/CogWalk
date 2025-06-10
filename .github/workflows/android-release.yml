@@ -60,8 +60,9 @@ jobs:
            cogwalk-${{ github.ref_name }}.apk
 
     # ──────────────── 9. Publie dans GitHub Releases ───────────
-    - uses: softprops/action-gh-release@v2
+    - name: Publish APK
+      uses: softprops/action-gh-release@v2.2.1
       with:
-         files: cogwalk-${{ github.ref_name }}.apk
+          files: cogwalk-${{ github.ref_name }}.apk
       env:
-         GITHUB_TOKEN: ${{ secrets.GH_PAT }}   # PAT classic scope repo
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
