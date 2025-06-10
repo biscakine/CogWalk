@@ -1,27 +1,29 @@
 //------------------------------------------------------------
 // app/views/test/test-input-view-model.ts
-// ViewModel aligné avec TestResult — score = nombre d’erreurs brut
+// ViewModel final – génère la phrase via PhrasesService
 //------------------------------------------------------------
 
 import { Observable, Frame } from '@nativescript/core';
 import { TestService } from '../../services/test.service';
+import { PhrasesService } from '../../services/phrases.service';
 import { TestResult } from '../../models/test-result.model';
 
-// Contexte transmis à la page via navigation
+// Contexte optionnel passé via navigation
 export interface TestInputContext {
   participantId?: string;
   sessionId?: string;
-  /** Phrase que le participant devait mémoriser */
-  originalPhrase?: string;
 }
 
 export class TestInputViewModel extends Observable {
-  // ───────────── CHRONOMÈTRE ─────────────
+  private phrasesSvc = new PhrasesService();
+
+  // ---- Stopwatch ----
   private startTime = 0;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
-  private _timer = '0';            // bindé dans la vue
 
-  // ───────────── ÉTAT DU FORMULAIRE / RÉSULTATS ─────────────
+  // ---- Bindables ----
+  public timer = '0';
+  public originalText = '';
   public userInput = '';
   public showResults = false;
   public timeTaken = 0;
@@ -29,106 +31,80 @@ export class TestInputViewModel extends Observable {
 
   constructor(private ctx: TestInputContext = {}) {
     super();
-    this.startTimer();   // Lancement immédiat à l’arrivée sur la page
+    this.newTry();
   }
 
-  // ───────────── PROPRIÉTÉ BINDABLE ─────────────
-  get timer(): string {
-    return this._timer;
-  }
-
-  // ───────────── GESTION DU CHRONO ─────────────
-  private tick = () => {
-    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-    this._timer = elapsed.toString();
-    this.notifyPropertyChange('timer', this._timer);
-  };
-
-  private startTimer(): void {
+  // ───────── Timer control ─────────
+  startTimer(): void {
     this.stopTimer();
     this.startTime = Date.now();
-    this.timerInterval = setInterval(this.tick, 1_000);
+    this.timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+      this.timer = elapsed.toString();
+      this.notifyPropertyChange('timer', this.timer);
+    }, 1000);
   }
 
-  private stopTimer(): void {
+  stopTimer(): void {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
   }
 
-  public dispose(): void {
-    this.stopTimer();
+  // ───────── Game flow ─────────
+  /** Commence un nouvel essai avec une nouvelle phrase aléatoire. */
+  newTry(): void {
+    this.showResults = false;
+    this.userInput = '';
+    this.errorCount = 0;
+    this.timeTaken = 0;
+
+    // Tirer une phrase depuis le service unique
+    this.originalText = this.phrasesSvc.getRandomPhrase();
+    this.notifyPropertyChange('originalText', this.originalText);
+
+    this.timer = '0';
+    this.notifyPropertyChange('timer', this.timer);
+
+    this.startTimer();
   }
 
-  private getElapsedSeconds(): number {
-    return parseInt(this._timer, 10);
-  }
-
-  // ───────────── HANDLERS DÉCLARÉS DANS LE XML ─────────────
-  /** Clic sur « Terminé » */
-  public onFinishTest(): void {
-    // 1) Arrêt du chrono & calculs
+  /** Appelé quand l’utilisateur valide la saisie (tap « Terminer »). */
+  onFinishTest(): void {
     this.stopTimer();
-    this.timeTaken = this.getElapsedSeconds();
+    this.timeTaken = parseInt(this.timer, 10);
 
-    const original = this.ctx.originalPhrase ?? '';
-    this.errorCount = TestService.getInstance().calculateErrors(original, this.userInput);
+    // Calcul des erreurs via TestService utilitaire
+    this.errorCount = TestService.getInstance().calculateErrors(
+      this.originalText,
+      this.userInput
+    );
 
-    // 2) Construction du résultat complet conforme à TestResult
-    const wordCount = original.split(' ').filter(Boolean).length;
-    const now = new Date();
-
-    // Le score est le **nombre brut d’erreurs**
+    // score = nombre d’erreurs brut
     const score = this.errorCount;
 
     const result: TestResult = {
       id: Date.now().toString(),
       participantId: this.ctx.participantId ?? '',
-      originalText: original,
+      sessionId: this.ctx.sessionId ?? '',
+      originalText: this.originalText,
       userInput: this.userInput,
-      wordCount,
+      wordCount: this.originalText.split(' ').filter(Boolean).length,
       timeTaken: this.timeTaken,
       errorCount: this.errorCount,
-      timestamp: now,
-      date: now,
+      timestamp: Date.now(),
+      date: new Date(),
       score
-    };
+    } as unknown as TestResult;
 
     TestService.getInstance().addResult(result);
 
-    // 3) Mise à jour de l’UI pour afficher la section Résultats
     this.showResults = true;
     this.notifyPropertyChange('showResults', this.showResults);
-    this.notifyPropertyChange('timeTaken', this.timeTaken);
-    this.notifyPropertyChange('errorCount', this.errorCount);
   }
 
-  /** Clic sur « Nouvel essai » */
-  public onNewTry(): void {
-    this.userInput = '';
-    this.notifyPropertyChange('userInput', this.userInput);
-
-    this._timer = '0';
-    this.notifyPropertyChange('timer', this._timer);
-
-    this.errorCount = 0;
-    this.timeTaken = 0;
-    this.notifyPropertyChange('errorCount', this.errorCount);
-    this.notifyPropertyChange('timeTaken', this.timeTaken);
-
-    this.showResults = false;
-    this.notifyPropertyChange('showResults', this.showResults);
-
-    this.startTimer();
-  }
-
-  /** Clic sur « Terminer le test » */
-  public onFinishSession(): void {
-    Frame.topmost().navigate({
-      moduleName: 'views/home/home-page',
-      clearHistory: true,
-      transition: { name: 'fade', duration: 200 }
-    });
+  dispose(): void {
+    this.stopTimer();
   }
 }
