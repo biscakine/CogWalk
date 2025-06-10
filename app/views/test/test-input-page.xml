@@ -39,12 +39,13 @@
 
             <StackLayout class="m-4">
                 <Button text="Nouvel essai"
-                        tap="{{ onNewTry }}"
+                        tap="{{ newTry }}"
                         class="btn-gradient" />
-                        
+
                 <Button text="Terminer le test"
-                        tap="{{ onFinishSession }}"
+                        tap="{{ onFinishTest }}"
                         class="btn-gradient" />
+
             </StackLayout>
         </StackLayout>
     </StackLayout>
