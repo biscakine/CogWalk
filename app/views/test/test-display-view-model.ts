@@ -1,43 +1,39 @@
-import { Frame } from '@nativescript/core';
-import { PhrasesService } from '../../services/phrases.service';
-import { BaseViewModel } from '../base-view-model';
+import { Observable, Frame } from '@nativescript/core';
 
-export class TestDisplayViewModel extends BaseViewModel {
-    private phrasesService: PhrasesService;
-    private _phrase: string = '';
-    private participant: any;
+export interface TestDisplayContext {
+  originalText?: string;
+  participantId?: string;
+  sessionId?: string;
+  wordCount?: number;
+}
 
-    constructor(context: { participant: any }) {
-        super();
-        this.phrasesService = new PhrasesService();
-        this.participant = context.participant;
-        
-        try {
-            this._phrase = this.phrasesService.getRandomPhrase();
-            this.notifyPropertyChange('phrase', this._phrase);
-        } catch (error) {
-            console.error('Error getting random phrase:', error);
-            this._phrase = 'Error loading phrase';
-            this.notifyPropertyChange('phrase', this._phrase);
-        }
-    }
+export class TestDisplayViewModel extends Observable {
+  public phrase: string = '';
 
-    get phrase(): string {
-        return this._phrase;
-    }
+  private ctx: TestDisplayContext;
 
-    onPhraseMemorized() {
-        Frame.topmost().navigate({
-            moduleName: 'views/test/test-input-page',
-            context: {
-                phrase: this._phrase,
-                participant: this.participant
-            },
-            clearHistory: false,
-            transition: {
-                name: 'slide',
-                duration: 200
-            }
-        });
-    }
+  constructor(context: TestDisplayContext) {
+    super();
+    this.ctx = context || {};
+    // Récupère la phrase à mémoriser depuis le contexte
+    this.phrase = this.ctx.originalText || '';
+    this.notifyPropertyChange('phrase', this.phrase);
+  }
+
+  /** Appelé quand l’utilisateur clique sur “J’ai mémorisé” */
+  public onPhraseMemorized(): void {
+    Frame.topmost().navigate({
+      moduleName: 'views/test/test-input-page',
+      context: {
+        participantId: this.ctx.participantId,
+        sessionId:     this.ctx.sessionId,
+        wordCount:     this.ctx.wordCount
+      },
+      clearHistory: false,
+      transition: {
+        name: 'slide',
+        duration: 200
+      }
+    });
+  }
 }
