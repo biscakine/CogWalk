@@ -1,6 +1,6 @@
 export class PhrasesService {
-  // La liste brute de tes 6 phrases
-  private static readonly list = [
+  // Tableau de 6 phrases prédéfinies
+  private phrases: string[] = [
     "Le chien est gris",
     "Le pneu est froid",
     "Le chat est doux",
@@ -9,33 +9,24 @@ export class PhrasesService {
     "Le train est vert"
   ];
 
-  // La queue statique partagée par toutes les instances
-  private static queue: string[] = [];
+  // Phrases restantes dans la série en cours (initialement vide)
+  private remainingPhrases: string[] = [];
 
-  /** 
-   * Initialise ou reshuffle la queue si elle est vide.
-   * On y met une copie mélangée de la "list".
-   */
-  private static ensureQueue(): void {
-    if (PhrasesService.queue.length === 0) {
-      PhrasesService.queue = [...PhrasesService.list];
-      // Fisher–Yates shuffle
-      for (let i = PhrasesService.queue.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [PhrasesService.queue[i], PhrasesService.queue[j]] =
-          [PhrasesService.queue[j], PhrasesService.queue[i]];
-      }
-      console.log("[PhrasesService] reset queue:", PhrasesService.queue);
+  /** Retourne une phrase aléatoire, en respectant l'unicité sur chaque série de 6 */
+  public getRandomPhrase(): string {
+    // Si toutes les phrases de la série précédente ont été utilisées, on redémarre une nouvelle série
+    if (this.remainingPhrases.length === 0) {
+      // On copie le tableau original des phrases pour éviter de le modifier directement
+      this.remainingPhrases = [...this.phrases];
     }
+    // Sélectionne un index aléatoire dans remainingPhrases, retire la phrase correspondante du tableau
+    const randomIndex = Math.floor(Math.random() * this.remainingPhrases.length);
+    const phraseChoisie = this.remainingPhrases.splice(randomIndex, 1)[0];  // retire l'élément:contentReference[oaicite:0]{index=0}
+    return phraseChoisie;
   }
 
-  /**
-   * Renvoie la phrase suivante, sans répétition avant épuisement des 6.
-   */
-  public getRandomPhrase(): string {
-    PhrasesService.ensureQueue();
-    const phrase = PhrasesService.queue.shift()!;
-    console.log("[PhrasesService] pick:", phrase, "| remaining:", PhrasesService.queue);
-    return phrase;
+  /** (Optionnel) Retourne la liste complète des phrases possibles */
+  public getAllPhrases(): string[] {
+    return [...this.phrases];  // retourne une copie pour préserver l'encapsulation
   }
 }
