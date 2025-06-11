@@ -1,33 +1,18 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
-    <ActionBar class="header">
-        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
-        <StackLayout>
-            <Label text="Détails de la session" class="title" />
-        </StackLayout>
-    </ActionBar>
-    
-    <StackLayout class="content">
-        <StackLayout class="session-item">
-            <Label text="{{ session.name }}" class="session-title" />
-            <Label text="{{ formattedDate }}" class="session-date" />
-            
-            <Button text="Exporter les résultats"
-                    tap="{{ onExportResults }}"
-                    class="btn-gradient" />
-        </StackLayout>
+<Page …>
+  <ActionBar … />
+  <StackLayout class="content">
+    <!-- Tes sections existantes… -->
 
-        <Button text="Ajouter un participant"
-                tap="{{ onAddParticipant }}"
-                class="btn-gradient" />
-
-        <ListView items="{{ session.participants }}" 
-                  class="session-list"
-                  itemTap="{{ onParticipantTap }}">
-            <ListView.itemTemplate>
-                <StackLayout class="session-item">
-                    <Label text="{{ firstName + ' ' + lastName }}" class="session-title" />
-                </StackLayout>
-            </ListView.itemTemplate>
-        </ListView>
-    </StackLayout>
+    <!-- Nouvelle section : Liste des résultats -->
+    <Label text="Résultats du test" class="session-title text-center mt-4" />
+    <ListView items="{{ sessionResults }}" class="m-4">
+      <ListView.itemTemplate>
+        <GridLayout columns="*,*,*" rows="auto" class="p-2 border-b">
+          <Label col="0" text="{{ participantId }}" />
+          <Label col="1" text="{{ timeTaken + 's' }}" />
+          <Label col="2" text="{{ errorCount }}" />
+        </GridLayout>
+      </ListView.itemTemplate>
+    </ListView>
+  </StackLayout>
 </Page>
