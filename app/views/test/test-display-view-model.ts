@@ -1,36 +1,43 @@
-import { Observable } from '@nativescript/core';
+import { Frame } from '@nativescript/core';
 import { PhrasesService } from '../../services/phrases.service';
-import { TestService } from '../../services/test.service';
-import { TestResult } from '../../models/test-result.model';
+import { BaseViewModel } from '../base-view-model';
 
-export interface TestDisplayContext {
-  participantId?: string;
-  sessionId?: string;
-}
+export class TestDisplayViewModel extends BaseViewModel {
+    private phrasesService: PhrasesService;
+    private _phrase: string = '';
+    private participant: any;
 
-export class TestDisplayViewModel extends Observable {
-  private phrasesService = PhrasesService.getInstance();
-  private testService   = TestService.getInstance();
-
-  public phrase     = '';
-  public userInput  = '';
-  public timeTaken  = 0;
-  public errorCount = 0;
-
-  constructor(private ctx: TestDisplayContext) {
-    super();
-
-    // Récupérer les données passées en navigation
-    if (ctx) {
-      this.phrase    = ctx['originalText'] || this.phrasesService.getRandomPhrase();
-      this.userInput = ctx['userInput'] || '';
-      this.timeTaken = ctx['timeTaken'] || 0;
-      this.errorCount= ctx['errorCount'] || 0;
-
-      this.notifyPropertyChange('phrase', this.phrase);
-      this.notifyPropertyChange('userInput', this.userInput);
-      this.notifyPropertyChange('timeTaken', this.timeTaken);
-      this.notifyPropertyChange('errorCount', this.errorCount);
+    constructor(context: { participant: any }) {
+        super();
+        this.phrasesService = new PhrasesService();
+        this.participant = context.participant;
+        
+        try {
+            this._phrase = this.phrasesService.getRandomPhrase();
+            this.notifyPropertyChange('phrase', this._phrase);
+        } catch (error) {
+            console.error('Error getting random phrase:', error);
+            this._phrase = 'Error loading phrase';
+            this.notifyPropertyChange('phrase', this._phrase);
+        }
     }
-  }
+
+    get phrase(): string {
+        return this._phrase;
+    }
+
+    onPhraseMemorized() {
+        Frame.topmost().navigate({
+            moduleName: 'views/test/test-input-page',
+            context: {
+                phrase: this._phrase,
+                participant: this.participant
+            },
+            clearHistory: false,
+            transition: {
+                name: 'slide',
+                duration: 200
+            }
+        });
+    }
 }
