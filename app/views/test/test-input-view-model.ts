@@ -1,3 +1,4 @@
+
 //------------------------------------------------------------
 // app/views/test/test-input-view-model.ts
 // ViewModel final – génère la phrase via PhrasesService
@@ -15,7 +16,7 @@ type TestInputContext = {
 };
 
 export class TestInputViewModel extends Observable {
-  private phrasesSvc = PhrasesService.getInstance();
+  private phrasesSvc = new PhrasesService();
 
   // ---- Stopwatch ----
   private startTime = 0;
