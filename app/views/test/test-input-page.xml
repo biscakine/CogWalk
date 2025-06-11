@@ -1,52 +1,61 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
-    <ActionBar class="header">
-        <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
-        <StackLayout>
-            <Label text="Test" class="title" />
-        </StackLayout>
-    </ActionBar>
-    
-    <StackLayout class="content">
-        <!-- Test Input Section -->
-        <StackLayout class="session-item" visibility="{{ !showResults ? 'visible' : 'collapsed' }}">
-            <Label text="Écrivez la phrase mémorisée :" class="session-title" />
-            
-            <TextField hint="Tapez la phrase ici..."
-                      text="{{ userInput }}"
-                      autocorrect="false"
-                      autocapitalizationType="none"
-                      class="input-field" />
-            
-            <Label text="{{ timer }}"
-                   class="session-title text-center" />
-            
-            <Button text="Terminé"
-                    tap="{{ onFinishTest }}"
-                    class="btn-gradient" />
-        </StackLayout>
-
-        <!-- Results Section -->
-        <StackLayout class="session-item" visibility="{{ showResults ? 'visible' : 'collapsed' }}">
-            <Label text="Résultats" class="session-title text-center" />
-            
-            <GridLayout columns="*, *" rows="auto, auto" class="m-4">
-                <Label col="0" row="0" text="Temps :" class="session-info" />
-                <Label col="1" row="0" text="{{ timeTaken + ' secondes' }}" class="session-info" />
-                
-                <Label col="0" row="1" text="Erreurs :" class="session-info" />
-                <Label col="1" row="1" text="{{ errorCount }}" class="session-info" />
-            </GridLayout>
-
-            <StackLayout class="m-4">
-                <Button text="Nouvel essai"
-                        tap="{{ newTry }}"
-                        class="btn-gradient" />
-
-                <Button text="Terminer le test"
-                        tap="{{ onFinishTest }}"
-                        class="btn-gradient" />
-
-            </StackLayout>
-        </StackLayout>
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+      navigatingTo="navigatingTo"
+      class="page">
+  <ActionBar class="header">
+    <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+    <StackLayout>
+      <Label text="Test" class="title" />
     </StackLayout>
+  </ActionBar>
+
+  <StackLayout class="content">
+    <!-- Saisie du test -->
+    <StackLayout class="session-item"
+                 visibility="{{ !showResults ? 'visible' : 'collapsed' }}">
+      <Label text="Écrivez la phrase mémorisée :"
+             class="session-title" />
+
+      <TextField hint="Tapez la phrase ici..."
+                 text="{{ userInput }}"
+                 autocorrect="false"
+                 autocapitalizationType="none"
+                 class="input-field" />
+
+      <Label text="{{ timer }}"
+             class="session-title text-center" />
+
+      <Button text="Terminé"
+              tap="{{ onFinishTest }}"
+              class="btn-gradient" />
+    </StackLayout>
+
+    <!-- Résultats du test -->
+    <StackLayout class="session-item"
+                 visibility="{{ showResults ? 'visible' : 'collapsed' }}">
+      <Label text="Résultats"
+             class="session-title text-center" />
+
+      <GridLayout columns="*, *" rows="auto, auto"
+                  class="m-4">
+        <Label col="0" row="0" text="Temps :" class="session-info" />
+        <Label col="1" row="0" text="{{ timeTaken + ' secondes' }}" class="session-info" />
+
+        <Label col="0" row="1" text="Erreurs :" class="session-info" />
+        <Label col="1" row="1" text="{{ errorCount }}" class="session-info" />
+      </GridLayout>
+
+      <StackLayout class="m-4">
+        <!-- 1er clic dans onFinishTest → showResults devient true -->
+        <!-- 2ᵉ clic → navigate vers test-display-page pour le nouvel essai -->
+        <Button text="Nouvel essai"
+                tap="{{ onFinishTest }}"
+                class="btn-gradient" />
+
+        <!-- Ici tu peux aussi renommer en « Recommencer » ou « Retour » -->
+        <Button text="Terminer le test"
+                tap="{{ onFinishTest }}"
+                class="btn-gradient" />
+      </StackLayout>
+    </StackLayout>
+  </StackLayout>
 </Page>
