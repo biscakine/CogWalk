@@ -3,25 +3,21 @@ import { TestService } from '../../services/test.service';
 import { PhrasesService } from '../../services/phrases.service';
 import { TestResult } from '../../models/test-result.model';
 
-// Contexte optionnel passé via navigation
 export interface TestInputContext {
   participantId?: string;
-  sessionId?:     string;
+  sessionId?: string;
 }
 
 export class TestInputViewModel extends Observable {
-  // --- services ---
   private phrasesSvc = new PhrasesService();
   private testSvc    = TestService.getInstance();
 
-  // --- queue d’instance ---
+  // Queue locale pour 6 phrases uniques
   private phraseQueue: string[] = [];
 
-  // ---- Stopwatch ----
   private startTime = 0;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
-  // ---- Bindables ----
   public timer        = '0';
   public originalText = '';
   public userInput    = '';
@@ -35,11 +31,15 @@ export class TestInputViewModel extends Observable {
     this.newTry();
   }
 
-  /** Initialise ou réinitialise la queue avec un shuffle Fisher–Yates */
+  /** Shuffle Fisher–Yates initial de la queue */
   private resetPhraseQueue(): void {
-    this.phraseQueue = this.phrasesSvc
-      .getAllPhrases()
-      .sort(() => Math.random() - 0.5);
+    const list = this.phrasesSvc.getAllPhrases();
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    this.phraseQueue = list;
+    console.log('[TestInput] Reset queue:', this.phraseQueue);
   }
 
   private startTimer(): void {
@@ -59,37 +59,33 @@ export class TestInputViewModel extends Observable {
     }
   }
 
-  /** Tirez la phrase suivante de la queue ; si la queue est vide, on la réinitialise. */
+  /** Nouvel essai : tire une phrase sans doublon sur 6 puis reset si nécessaire */
   public newTry(): void {
-    // Reset UI
-    this.showResults  = false;
-    this.userInput    = '';
-    this.errorCount   = 0;
-    this.timeTaken    = 0;
+    this.showResults = false;
+    this.userInput = '';
+    this.errorCount = 0;
+    this.timeTaken = 0;
     this.notifyPropertyChange('showResults', this.showResults);
     this.notifyPropertyChange('userInput', this.userInput);
     this.notifyPropertyChange('errorCount', this.errorCount);
     this.notifyPropertyChange('timeTaken', this.timeTaken);
 
-    // Si on a épuisé les 6 phrases, on reshuffle
     if (this.phraseQueue.length === 0) {
       this.resetPhraseQueue();
     }
 
-    // Tirage sans répétition dans ce bloc de 6
     this.originalText = this.phraseQueue.shift()!;
+    console.log('[TestInput] Shuffled phrase:', this.originalText, '; Remaining:', this.phraseQueue);
     this.notifyPropertyChange('originalText', this.originalText);
 
-    // Reset du timer
     this.timer = '0';
     this.notifyPropertyChange('timer', this.timer);
     this.startTimer();
   }
 
-  /** Gère le bouton “Terminé” et la navigation arrière au second clic */
+  /** Valider la saisie ou revenir en arrière */
   public onFinishTest(): void {
     if (!this.showResults) {
-      // 1er clic : finir le test
       this.stopTimer();
       this.timeTaken = parseInt(this.timer, 10);
       this.notifyPropertyChange('timeTaken', this.timeTaken);
@@ -100,7 +96,6 @@ export class TestInputViewModel extends Observable {
       );
       this.notifyPropertyChange('errorCount', this.errorCount);
 
-      // Sauvegarde
       const result: TestResult = {
         id:            Date.now().toString(),
         participantId: this.ctx.participantId ?? '',
@@ -114,13 +109,11 @@ export class TestInputViewModel extends Observable {
         date:          new Date(),
         score:         this.errorCount
       } as unknown as TestResult;
-      this.testSvc.addResult(result);
 
-      // Affiche la section résultats
+      this.testSvc.addResult(result);
       this.showResults = true;
       this.notifyPropertyChange('showResults', this.showResults);
     } else {
-      // 2ᵉ clic : on retourne à la page précédente
       Frame.topmost().goBack();
     }
   }
