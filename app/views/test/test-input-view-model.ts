@@ -15,7 +15,7 @@ type TestInputContext = {
 };
 
 export class TestInputViewModel extends Observable {
-  private phrasesSvc = new PhrasesService();
+  private phrasesSvc = PhrasesService.getInstance();
 
   // ---- Stopwatch ----
   private startTime = 0;
