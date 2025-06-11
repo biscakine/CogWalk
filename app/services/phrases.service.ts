@@ -1,8 +1,6 @@
-// app/services/phrases.service.ts
-
 export class PhrasesService {
   // La liste brute de tes 6 phrases
-  private static readonly frenchPhrases = [
+  private static readonly list = [
     "Le chien est gris",
     "Le pneu est froid",
     "Le chat est doux",
@@ -11,19 +9,33 @@ export class PhrasesService {
     "Le train est vert"
   ];
 
-  constructor() {
-    // vide : on peut toujours faire new PhrasesService()
+  // La queue statique partagée par toutes les instances
+  private static queue: string[] = [];
+
+  /** 
+   * Initialise ou reshuffle la queue si elle est vide.
+   * On y met une copie mélangée de la "list".
+   */
+  private static ensureQueue(): void {
+    if (PhrasesService.queue.length === 0) {
+      PhrasesService.queue = [...PhrasesService.list];
+      // Fisher–Yates shuffle
+      for (let i = PhrasesService.queue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [PhrasesService.queue[i], PhrasesService.queue[j]] =
+          [PhrasesService.queue[j], PhrasesService.queue[i]];
+      }
+      console.log("[PhrasesService] reset queue:", PhrasesService.queue);
+    }
   }
 
-  /** Renvoie une copie de la liste complète des phrases */
-  public getAllPhrases(): string[] {
-    return [...PhrasesService.frenchPhrases];
-  }
-
-  /** (optionnel) Si tu as toujours besoin d’un tirage simple */
+  /**
+   * Renvoie la phrase suivante, sans répétition avant épuisement des 6.
+   */
   public getRandomPhrase(): string {
-    const list = this.getAllPhrases();
-    const idx = Math.floor(Math.random() * list.length);
-    return list[idx];
+    PhrasesService.ensureQueue();
+    const phrase = PhrasesService.queue.shift()!;
+    console.log("[PhrasesService] pick:", phrase, "| remaining:", PhrasesService.queue);
+    return phrase;
   }
 }
