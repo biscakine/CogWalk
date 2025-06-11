@@ -8,13 +8,15 @@ export class PhrasesService {
     "Le lion est brun",
     "Le train est vert"
   ];
+
+  // Notre queue interne
   private phraseQueue: string[] = [];
 
   private constructor() {
     this.resetQueue();
   }
 
-  /** Singleton */
+  /** Singleton : toujours passer par getInstance() */
   static getInstance(): PhrasesService {
     if (!PhrasesService.instance) {
       PhrasesService.instance = new PhrasesService();
@@ -22,8 +24,8 @@ export class PhrasesService {
     return PhrasesService.instance;
   }
 
-  /** (Re)remplit et mélange la queue interne */
-  private resetQueue() {
+  /** (Re)remplit et mélange la queue */
+  private resetQueue(): void {
     this.phraseQueue = [...this.frenchPhrases];
     // Fisher–Yates shuffle
     for (let i = this.phraseQueue.length - 1; i > 0; i--) {
@@ -33,7 +35,7 @@ export class PhrasesService {
     }
   }
 
-  /** Renvoie la phrase suivante sans répétition dans un bloc de 6 */
+  /** Renvoie la phrase suivante, sans répétition sur 6 appels */
   getRandomPhrase(): string {
     if (this.phraseQueue.length === 0) {
       this.resetQueue();
