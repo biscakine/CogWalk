@@ -9,10 +9,10 @@ import { PhrasesService } from '../../services/phrases.service';
 import { TestResult } from '../../models/test-result.model';
 
 // Contexte optionnel passé via navigation
-export interface TestInputContext {
+type TestInputContext = {
   participantId?: string;
   sessionId?: string;
-}
+};
 
 export class TestInputViewModel extends Observable {
   private phrasesSvc = new PhrasesService();
@@ -56,9 +56,13 @@ export class TestInputViewModel extends Observable {
   /** Commence un nouvel essai avec une nouvelle phrase aléatoire. */
   newTry(): void {
     this.showResults = false;
+    this.notifyPropertyChange('showResults', this.showResults);
     this.userInput = '';
+    this.notifyPropertyChange('userInput', this.userInput);
     this.errorCount = 0;
+    this.notifyPropertyChange('errorCount', this.errorCount);
     this.timeTaken = 0;
+    this.notifyPropertyChange('timeTaken', this.timeTaken);
 
     // Tirer une phrase depuis le service unique
     this.originalText = this.phrasesSvc.getRandomPhrase();
@@ -70,38 +74,46 @@ export class TestInputViewModel extends Observable {
     this.startTimer();
   }
 
-  /** Appelé quand l’utilisateur valide la saisie (tap « Terminer »). */
+  /** Appelé quand l’utilisateur valide la saisie (tap « Terminé »). */
   onFinishTest(): void {
-    this.stopTimer();
-    this.timeTaken = parseInt(this.timer, 10);
+    if (!this.showResults) {
+      // Première validation : arrêter le timer et calculer le résultat
+      this.stopTimer();
+      this.timeTaken = parseInt(this.timer, 10);
+      this.notifyPropertyChange('timeTaken', this.timeTaken);
 
-    // Calcul des erreurs via TestService utilitaire
-    this.errorCount = TestService.getInstance().calculateErrors(
-      this.originalText,
-      this.userInput
-    );
+      // Calcul des erreurs via TestService utilitaire
+      this.errorCount = TestService.getInstance().calculateErrors(
+        this.originalText,
+        this.userInput
+      );
+      this.notifyPropertyChange('errorCount', this.errorCount);
 
-    // score = nombre d’erreurs brut
-    const score = this.errorCount;
+      // Construction du résultat
+      const result: TestResult = {
+        id: Date.now().toString(),
+        participantId: this.ctx.participantId ?? '',
+        sessionId: this.ctx.sessionId ?? '',
+        originalText: this.originalText,
+        userInput: this.userInput,
+        wordCount: this.originalText.split(' ').filter(Boolean).length,
+        timeTaken: this.timeTaken,
+        errorCount: this.errorCount,
+        timestamp: Date.now(),
+        date: new Date(),
+        score: this.errorCount
+      } as unknown as TestResult;
 
-    const result: TestResult = {
-      id: Date.now().toString(),
-      participantId: this.ctx.participantId ?? '',
-      sessionId: this.ctx.sessionId ?? '',
-      originalText: this.originalText,
-      userInput: this.userInput,
-      wordCount: this.originalText.split(' ').filter(Boolean).length,
-      timeTaken: this.timeTaken,
-      errorCount: this.errorCount,
-      timestamp: Date.now(),
-      date: new Date(),
-      score
-    } as unknown as TestResult;
+      // Sauvegarde du résultat
+      TestService.getInstance().addResult(result);
 
-    TestService.getInstance().addResult(result);
-
-    this.showResults = true;
-    this.notifyPropertyChange('showResults', this.showResults);
+      // Afficher les résultats
+      this.showResults = true;
+      this.notifyPropertyChange('showResults', this.showResults);
+    } else {
+      // Deuxième tap : revenir à la page précédente
+      Frame.topmost().goBack();
+    }
   }
 
   dispose(): void {
