@@ -1,39 +1,36 @@
-import { Frame } from '@nativescript/core';
+import { Frame, alert } from '@nativescript/core';
 import { SessionService } from '../../services/session.service';
-import { BaseViewModel } from '../base-view-model';
+import { TestService }    from '../../services/test.service';
+import { TestResult }     from '../../models/test-result.model';
+import { BaseViewModel }  from '../base-view-model';
 
-export class CreateSessionViewModel extends BaseViewModel {
-  private _sessionName: string = '';
-  private sessionService: SessionService;
+export class SessionDetailViewModel extends BaseViewModel {
+  private sessionService = SessionService.getInstance();
+  private testService    = TestService.getInstance();
 
-  constructor() {
+  private _sessionResults: TestResult[] = [];
+
+  constructor(private sessionId: string) {
     super();
-    this.sessionService = new SessionService();
+    this.loadSession();
+    this.loadResults();
   }
 
-  get sessionName(): string {
-    return this._sessionName;
+  // … tes getters pour session et formattedDate …
+
+  /** Charge les résultats de cette session */
+  loadResults(): void {
+    if (!this.session) return;
+    const allResults = this.testService.getResults();
+    // Filtrer ceux qui appartiennent à cette session
+    this._sessionResults = allResults.filter(r => r.sessionId === this.sessionId);
+    this.notifyPropertyChange('sessionResults', this._sessionResults);
   }
 
-  set sessionName(value: string) {
-    if (this._sessionName !== value) {
-      this._sessionName = value;
-      this.notifyPropertyChange('sessionName', value);
-    }
+  /** Getter utilisé par le binding */
+  get sessionResults(): TestResult[] {
+    return this._sessionResults;
   }
 
-  onCreateSession() {
-    if (this._sessionName.length > 0) {
-      const session = this.sessionService.createSession(this._sessionName);
-      Frame.topmost().navigate({
-        moduleName: 'views/participant/add-participant-page',
-        context: { sessionId: session.id },
-        clearHistory: false,
-        transition: {
-          name: 'slide',
-          duration: 200
-        }
-      });
-    }
-  }
+  // … tes méthodes onAddParticipant(), onParticipantTap(), onExportResults() …
 }
