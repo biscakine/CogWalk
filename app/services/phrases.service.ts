@@ -1,5 +1,4 @@
 export class PhrasesService {
-  // Ta liste fixe
   private static readonly frenchPhrases = [
     "Le chien est gris",
     "Le pneu est froid",
@@ -9,30 +8,31 @@ export class PhrasesService {
     "Le train est vert"
   ];
 
-  // Une queue statique partagée par toutes les instances
+  // Queue partagée par **toutes** les instances
   private static phraseQueue: string[] = [];
 
   constructor() {
-    // rien ici : on ne veut pas empêcher "new PhrasesService()"
+    // rien ici : on veut pouvoir faire new PhrasesService()
   }
 
-  /** (Re)remplit et mélange la queue */
+  /** Remplit et mélange la queue */
   private static resetQueue(): void {
-    // copie et shuffle Fisher–Yates
     PhrasesService.phraseQueue = [...PhrasesService.frenchPhrases];
     for (let i = PhrasesService.phraseQueue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [PhrasesService.phraseQueue[i], PhrasesService.phraseQueue[j]] =
         [PhrasesService.phraseQueue[j], PhrasesService.phraseQueue[i]];
     }
+    console.log('[PhrasesService] resetQueue =>', PhrasesService.phraseQueue);
   }
 
-  /** Renvoie la phrase suivante, sans répétition sur 6 appels */
+  /** Tire la prochaine phrase en évitant les répétitions sur 6 appels */
   public getRandomPhrase(): string {
     if (PhrasesService.phraseQueue.length === 0) {
       PhrasesService.resetQueue();
     }
-    // shift renvoie et retire la première entrée
-    return PhrasesService.phraseQueue.shift()!;
+    const phrase = PhrasesService.phraseQueue.shift()!;
+    console.log('[PhrasesService] getRandomPhrase →', phrase, '; remaining:', PhrasesService.phraseQueue);
+    return phrase;
   }
 }
