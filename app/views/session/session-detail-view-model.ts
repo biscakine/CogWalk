@@ -1,30 +1,51 @@
-import { Observable } from '@nativescript/core';
-import { TestService } from '../../services/test.service';
-import { TestResult }  from '../../models/test-result.model';
+import { Observable, Frame, alert } from '@nativescript/core';
+import { SessionService }             from '../../services/session.service';
+import { TestService }                from '../../services/test.service';
+import { TestResult }                 from '../../models/test-result.model';
+import { Session }                    from '../../models/session.model';
+import { formatFrenchDateTime }       from '../../utils/date-formatter';
 
 export class SessionDetailViewModel extends Observable {
-  // … tes imports et propriétés existantes
+  private sessionService = SessionService.getInstance();
+  private testService    = TestService.getInstance();
+
+  private sessionId: string;
+  private _session?:   Session;
+  private _sessionResults: TestResult[] = [];
+
+  public formattedDate = '';
 
   constructor(sessionId: string) {
     super();
-    // … ton loadSession()
+    this.sessionId = sessionId;
+    this.loadSession();
     this.loadResults();
   }
 
-  /** Charge et notifie les résultats pour cette session */
+  private loadSession(): void {
+    this._session = this.sessionService.getSession(this.sessionId);
+    if (this._session) {
+      this.formattedDate = formatFrenchDateTime(this._session.date);
+      this.notifyPropertyChange('session', this._session);
+      this.notifyPropertyChange('formattedDate', this.formattedDate);
+    }
+  }
+
+  get session(): Session | undefined {
+    return this._session;
+  }
+
+  /** Charge les résultats liés à cette session */
   public loadResults(): void {
-    const all = TestService.getInstance().getResults();
-    const filtered = all.filter(r => r.sessionId === this.sessionId);
-    this.notifyPropertyChange('sessionResults', filtered);
+    const allResults = this.testService.getResults();
+    // Il faut que TestResult.interface comprenne `sessionId: string`
+    this._sessionResults = allResults.filter(r => r.sessionId === this.sessionId);
+    this.notifyPropertyChange('sessionResults', this._sessionResults);
   }
 
-  /** Getter utilisé pour le binding */
   get sessionResults(): TestResult[] {
-    // stocke en interne après loadResults
-    return (this as any)._sessionResults || [];
+    return this._sessionResults;
   }
 
-  set sessionResults(v: TestResult[]) {
-    (this as any)._sessionResults = v;
-  }
+  // … tes autres méthodes : onAddParticipant, onParticipantTap, onExportResults …
 }
