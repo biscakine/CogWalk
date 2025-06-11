@@ -16,3 +16,12 @@ export class PhrasesService {
       console.log("[PhrasesService] reset queue:", PhrasesService.queue);
     }
   }
+
+  /** Renvoie la phrase suivante, sans répétition sur 6 tirages */
+  getRandomPhrase(): string {
+    PhrasesService.ensureQueue();
+    const p = PhrasesService.queue.shift()!;
+    console.log("[PhrasesService] pick:", p, "| remaining:", PhrasesService.queue);
+    return p;
+  }
+}
