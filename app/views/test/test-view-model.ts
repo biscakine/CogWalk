@@ -1,35 +1,64 @@
-import { Frame } from '@nativescript/core';
+import { Observable, Frame } from '@nativescript/core';
 import { PhrasesService } from '../../services/phrases.service';
 import { TestService } from '../../services/test.service';
-import { BaseViewModel } from '../base-view-model';
+import { TestResult } from '../../models/test-result.model';
 
-export class TestViewModel extends BaseViewModel {
-    private participant: any;
-    private phrasesService: PhrasesService;
-    private testService: TestService;
+export interface TestContext {
+  participantId?: string;
+  sessionId?: string;
+}
 
-    constructor(context: { participant: any }) {
-        super();
-        this.participant = context.participant;
-        this.phrasesService = new PhrasesService();
-        this.testService = TestService.getInstance();
-    }
+export class TestViewModel extends Observable {
+  private phrasesService = PhrasesService.getInstance();
+  private testService    = TestService.getInstance();
 
-    onStartTest() {
-        try {
-            Frame.topmost().navigate({
-                moduleName: 'views/test/test-display-page',
-                context: {
-                    participant: this.participant
-                },
-                clearHistory: false,
-                transition: {
-                    name: 'slide',
-                    duration: 200
-                }
-            });
-        } catch (error) {
-            console.error('Navigation error:', error);
-        }
-    }
+  public currentPhrase = '';
+  public userInput     = '';
+
+  constructor(private ctx: TestContext = {}) {
+    super();
+    this.loadNewPhrase();
+  }
+
+  private loadNewPhrase(): void {
+    this.currentPhrase = this.phrasesService.getRandomPhrase();
+    this.notifyPropertyChange('currentPhrase', this.currentPhrase);
+    this.userInput = '';
+    this.notifyPropertyChange('userInput', this.userInput);
+  }
+
+  public onValidate(): void {
+    // Arrêter le timer éventuel dans ce ViewModel
+    // ...
+
+    const errors = this.testService.calculateErrors(
+      this.currentPhrase,
+      this.userInput
+    );
+    const timeSec = /* calcul ou passage en contexte */ 0;
+
+    const result: TestResult = {
+      id:           Date.now().toString(),
+      participantId:this.ctx.participantId ?? '',
+      sessionId:    this.ctx.sessionId ?? '',
+      originalText: this.currentPhrase,
+      userInput:    this.userInput,
+      wordCount:    this.currentPhrase.split(' ').length,
+      timeTaken:    timeSec,
+      errorCount:   errors,
+      timestamp:    Date.now(),
+      date:         new Date(),
+      score:        errors
+    } as unknown as TestResult;
+
+    this.testService.addResult(result);
+
+    // Naviguer vers la page de résultats
+    Frame.topmost().navigate({
+      moduleName: 'views/test/test-display-page',
+      context:    result,
+      clearHistory: false,
+      transition: { name: 'slide', duration: 200 }
+    });
+  }
 }
