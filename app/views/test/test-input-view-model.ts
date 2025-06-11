@@ -1,42 +1,48 @@
-
-//------------------------------------------------------------
-// app/views/test/test-input-view-model.ts
-// ViewModel final – génère la phrase via PhrasesService
-//------------------------------------------------------------
-
 import { Observable, Frame } from '@nativescript/core';
 import { TestService } from '../../services/test.service';
 import { PhrasesService } from '../../services/phrases.service';
 import { TestResult } from '../../models/test-result.model';
 
 // Contexte optionnel passé via navigation
-type TestInputContext = {
+export interface TestInputContext {
   participantId?: string;
-  sessionId?: string;
-};
+  sessionId?:     string;
+}
 
 export class TestInputViewModel extends Observable {
+  // --- services ---
   private phrasesSvc = new PhrasesService();
+  private testSvc    = TestService.getInstance();
+
+  // --- queue d’instance ---
+  private phraseQueue: string[] = [];
 
   // ---- Stopwatch ----
   private startTime = 0;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   // ---- Bindables ----
-  public timer = '0';
+  public timer        = '0';
   public originalText = '';
-  public userInput = '';
-  public showResults = false;
-  public timeTaken = 0;
-  public errorCount = 0;
+  public userInput    = '';
+  public showResults  = false;
+  public timeTaken    = 0;
+  public errorCount   = 0;
 
   constructor(private ctx: TestInputContext = {}) {
     super();
+    this.resetPhraseQueue();
     this.newTry();
   }
 
-  // ───────── Timer control ─────────
-  startTimer(): void {
+  /** Initialise ou réinitialise la queue avec un shuffle Fisher–Yates */
+  private resetPhraseQueue(): void {
+    this.phraseQueue = this.phrasesSvc
+      .getAllPhrases()
+      .sort(() => Math.random() - 0.5);
+  }
+
+  private startTimer(): void {
     this.stopTimer();
     this.startTime = Date.now();
     this.timerInterval = setInterval(() => {
@@ -46,78 +52,80 @@ export class TestInputViewModel extends Observable {
     }, 1000);
   }
 
-  stopTimer(): void {
+  private stopTimer(): void {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
   }
 
-  // ───────── Game flow ─────────
-  /** Commence un nouvel essai avec une nouvelle phrase aléatoire. */
-  newTry(): void {
-    this.showResults = false;
+  /** Tirez la phrase suivante de la queue ; si la queue est vide, on la réinitialise. */
+  public newTry(): void {
+    // Reset UI
+    this.showResults  = false;
+    this.userInput    = '';
+    this.errorCount   = 0;
+    this.timeTaken    = 0;
     this.notifyPropertyChange('showResults', this.showResults);
-    this.userInput = '';
     this.notifyPropertyChange('userInput', this.userInput);
-    this.errorCount = 0;
     this.notifyPropertyChange('errorCount', this.errorCount);
-    this.timeTaken = 0;
     this.notifyPropertyChange('timeTaken', this.timeTaken);
 
-    // Tirer une phrase depuis le service unique
-    this.originalText = this.phrasesSvc.getRandomPhrase();
+    // Si on a épuisé les 6 phrases, on reshuffle
+    if (this.phraseQueue.length === 0) {
+      this.resetPhraseQueue();
+    }
+
+    // Tirage sans répétition dans ce bloc de 6
+    this.originalText = this.phraseQueue.shift()!;
     this.notifyPropertyChange('originalText', this.originalText);
 
+    // Reset du timer
     this.timer = '0';
     this.notifyPropertyChange('timer', this.timer);
-
     this.startTimer();
   }
 
-  /** Appelé quand l’utilisateur valide la saisie (tap « Terminé »). */
-  onFinishTest(): void {
+  /** Gère le bouton “Terminé” et la navigation arrière au second clic */
+  public onFinishTest(): void {
     if (!this.showResults) {
-      // Première validation : arrêter le timer et calculer le résultat
+      // 1er clic : finir le test
       this.stopTimer();
       this.timeTaken = parseInt(this.timer, 10);
       this.notifyPropertyChange('timeTaken', this.timeTaken);
 
-      // Calcul des erreurs via TestService utilitaire
-      this.errorCount = TestService.getInstance().calculateErrors(
+      this.errorCount = this.testSvc.calculateErrors(
         this.originalText,
         this.userInput
       );
       this.notifyPropertyChange('errorCount', this.errorCount);
 
-      // Construction du résultat
+      // Sauvegarde
       const result: TestResult = {
-        id: Date.now().toString(),
+        id:            Date.now().toString(),
         participantId: this.ctx.participantId ?? '',
-        sessionId: this.ctx.sessionId ?? '',
-        originalText: this.originalText,
-        userInput: this.userInput,
-        wordCount: this.originalText.split(' ').filter(Boolean).length,
-        timeTaken: this.timeTaken,
-        errorCount: this.errorCount,
-        timestamp: Date.now(),
-        date: new Date(),
-        score: this.errorCount
+        sessionId:     this.ctx.sessionId ?? '',
+        originalText:  this.originalText,
+        userInput:     this.userInput,
+        wordCount:     this.originalText.split(' ').filter(Boolean).length,
+        timeTaken:     this.timeTaken,
+        errorCount:    this.errorCount,
+        timestamp:     Date.now(),
+        date:          new Date(),
+        score:         this.errorCount
       } as unknown as TestResult;
+      this.testSvc.addResult(result);
 
-      // Sauvegarde du résultat
-      TestService.getInstance().addResult(result);
-
-      // Afficher les résultats
+      // Affiche la section résultats
       this.showResults = true;
       this.notifyPropertyChange('showResults', this.showResults);
     } else {
-      // Deuxième tap : revenir à la page précédente
+      // 2ᵉ clic : on retourne à la page précédente
       Frame.topmost().goBack();
     }
   }
 
-  dispose(): void {
+  public dispose(): void {
     this.stopTimer();
   }
 }
