@@ -23,7 +23,6 @@ export class PhrasesService {
       [PhrasesService.phraseQueue[i], PhrasesService.phraseQueue[j]] =
         [PhrasesService.phraseQueue[j], PhrasesService.phraseQueue[i]];
     }
-    console.log('[PhrasesService] resetQueue =>', PhrasesService.phraseQueue);
   }
 
   /** Tire la prochaine phrase en évitant les répétitions sur 6 appels */
