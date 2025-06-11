@@ -1,16 +1,63 @@
-<Page …>
-  <ActionBar … />
-  <StackLayout class="content">
-    <!-- Tes sections existantes… -->
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+      navigatingTo="navigatingTo"
+      class="page">
+  <ActionBar class="header">
+    <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
+    <StackLayout>
+      <Label text="Détails de la session" class="title" />
+    </StackLayout>
+  </ActionBar>
 
-    <!-- Nouvelle section : Liste des résultats -->
-    <Label text="Résultats du test" class="session-title text-center mt-4" />
-    <ListView items="{{ sessionResults }}" class="m-4">
+  <StackLayout class="content">
+    <!-- Informations de la session -->
+    <StackLayout class="session-item">
+      <Label text="{{ session.name }}" class="session-title" />
+      <Label text="{{ formattedDate }}" class="session-date" />
+
+      <Button text="Exporter les résultats"
+              tap="{{ onExportResults }}"
+              class="btn-gradient" />
+    </StackLayout>
+
+    <!-- Ajouter un participant -->
+    <Button text="Ajouter un participant"
+            tap="{{ onAddParticipant }}"
+            class="btn-gradient" />
+
+    <!-- Liste des participants -->
+    <ListView items="{{ session.participants }}"
+              class="session-list m-4"
+              itemTap="{{ onParticipantTap }}">
       <ListView.itemTemplate>
-        <GridLayout columns="*,*,*" rows="auto" class="p-2 border-b">
-          <Label col="0" text="{{ participantId }}" />
-          <Label col="1" text="{{ timeTaken + 's' }}" />
-          <Label col="2" text="{{ errorCount }}" />
+        <StackLayout class="session-item">
+          <Label text="{{ firstName + ' ' + lastName }}"
+                 class="session-title" />
+        </StackLayout>
+      </ListView.itemTemplate>
+    </ListView>
+
+    <!-- Résultats des tests -->
+    <Label text="Résultats du test"
+           class="session-title text-center mt-4" />
+
+    <ListView items="{{ sessionResults }}"
+              class="session-list m-4">
+      <ListView.itemTemplate>
+        <GridLayout columns="2*, *, *" rows="auto"
+                    class="p-2 border-b">
+          <!-- Phrase originale -->
+          <Label col="0"
+                 text="{{ originalText }}"
+                 textWrap="true"
+                 class="session-info" />
+          <!-- Temps pris -->
+          <Label col="1"
+                 text="{{ timeTaken + ' s' }}"
+                 class="session-info text-center" />
+          <!-- Nombre d’erreurs -->
+          <Label col="2"
+                 text="{{ errorCount }}"
+                 class="session-info text-right" />
         </GridLayout>
       </ListView.itemTemplate>
     </ListView>
