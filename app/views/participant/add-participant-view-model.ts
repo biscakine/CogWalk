@@ -1,71 +1,43 @@
-import { Frame } from '@nativescript/core';
+import { Observable, Frame } from '@nativescript/core';
 import { SessionService } from '../../services/session.service';
-import { BaseViewModel } from '../base-view-model';
+import { Participant }    from '../../models/participant.model';
 
-export class AddParticipantViewModel extends BaseViewModel {
-    private _firstName: string = '';
-    private _lastName: string = '';
-    private sessionService: SessionService;
-    private sessionId: string;
+export class AddParticipantViewModel extends Observable {
+  private sessionService = SessionService.getInstance();
+  private sessionId: string;
 
-    constructor(sessionId: string) {
-        super();
-        this.sessionService = SessionService.getInstance();
-        this.sessionId = sessionId;
-    }
+  public firstName = '';
+  public lastName  = '';
 
-    get firstName(): string {
-        return this._firstName;
-    }
+  constructor(sessionId: string) {
+    super();
+    this.sessionId = sessionId;
+    // Initial property notifications
+    this.notifyPropertyChange('firstName', this.firstName);
+    this.notifyPropertyChange('lastName', this.lastName);
+  }
 
-    set firstName(value: string) {
-        if (this._firstName !== value) {
-            this._firstName = value;
-            this.notifyPropertyChange('firstName', value);
-            this.notifyPropertyChange('isValid', this.isValid);
-        }
-    }
+  /** Validation : prénom et nom non vides */
+  get isValid(): boolean {
+    return this.firstName.trim().length > 0 && this.lastName.trim().length > 0;
+  }
 
-    get lastName(): string {
-        return this._lastName;
-    }
+  /** Appelé par le bouton "Ajouter" */
+  public onAddParticipant(): void {
+    const participant: Participant = {
+      id:        Date.now().toString(),
+      firstName: this.firstName.trim(),
+      lastName:  this.lastName.trim()
+    };
+    // Ajout du participant dans la session
+    this.sessionService.addParticipantToSession(this.sessionId, participant);
 
-    set lastName(value: string) {
-        if (this._lastName !== value) {
-            this._lastName = value;
-            this.notifyPropertyChange('lastName', value);
-            this.notifyPropertyChange('isValid', this.isValid);
-        }
-    }
-
-    get isValid(): boolean {
-        return this._firstName.length > 0 && this._lastName.length > 0;
-    }
-
-    onAddParticipant() {
-        if (this.isValid) {
-            const participant = {
-                id: Date.now().toString(),
-                firstName: this._firstName,
-                lastName: this._lastName,
-                createdAt: new Date()
-            };
-            
-            this.sessionService.addParticipantToSession(this.sessionId, participant);
-            
-            Frame.topmost().navigate({
-                moduleName: 'views/test/test-page',
-                context: { participant: participant },
-                clearHistory: false,
-                transition: {
-                    name: 'slide',
-                    duration: 200
-                }
-            });
-        }
-    }
-
-    onGoBack() {
-        Frame.topmost().goBack();
-    }
+    // Navigation retour vers la page de détail de session
+    Frame.topmost().navigate({
+      moduleName: 'views/session/session-detail-page',
+      context:    { sessionId: this.sessionId },
+      clearHistory: false,
+      transition: { name: 'slide', duration: 200 }
+    });
+  }
 }
