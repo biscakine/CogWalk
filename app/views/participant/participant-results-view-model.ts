@@ -1,49 +1,39 @@
-import { Observable, Frame, alert } from '@nativescript/core';
-import { SessionService } from '../../services/session.service';
-import { Participant }    from '../../models/participant.model';
+import { Observable } from '@nativescript/core';
+import { TestService } from '../../services/test.service';
+import { TestResult } from '../../models/test-result.model';
+import { Participant } from '../../models/participant.model';
+import { formatFrenchDateTime } from '../../utils/date-formatter';
 
-/** ViewModel pour la page "Ajouter un participant" */
-export class AddParticipantViewModel extends Observable {
-  private sessionId: string;
-  public firstName = '';
-  public lastName  = '';
+// ViewModel pour afficher les résultats d'un participant
+export class ParticipantResultsViewModel extends Observable {
+  private testService = TestService.getInstance();
+  private _results: Array<TestResult & { formattedDate: string; tryNumber: number }> = [];
+  private participant: Participant;
 
-  constructor(sessionId: string) {
+  constructor(participant: Participant) {
     super();
-    this.sessionId = sessionId;
+    this.participant = participant;
+    this.loadResults();
   }
 
-  /** Active le bouton seulement si les deux champs sont remplis */
-  get isValid(): boolean {
-    return this.firstName.trim().length > 0 && this.lastName.trim().length > 0;
+  // Charge et notifie les résultats pour ce participant
+  private loadResults(): void {
+    const pid = `${this.participant.firstName}_${this.participant.lastName}`;
+    const all = this.testService.getResults();
+    const filtered = all.filter(r => r.participantId === pid);
+    // Trier par timestamp décroissant
+    filtered.sort((a, b) => b.timestamp - a.timestamp);
+    // Ajouter formattedDate et tryNumber
+    this._results = filtered.map((r, i, arr) => ({
+      ...r,
+      formattedDate: formatFrenchDateTime(new Date(r.timestamp)),
+      tryNumber: arr.length - i
+    }));
+    this.notifyPropertyChange('results', this._results);
   }
 
-  /** Méthode appelée par le bouton "Ajouter" */
-  public async onAddParticipant(): Promise<void> {
-    // Debug: montre une alert pour confirmer l'appel
-    await alert({
-      title: 'Debug',
-      message: `onAddParticipant appelé pour session ${this.sessionId}\nPrénom: ${this.firstName}\nNom: ${this.lastName}`,
-      okButtonText: 'OK'
-    });
-
-    const trimmedFirst = this.firstName.trim();
-    const trimmedLast  = this.lastName.trim();
-    const participant: Participant = {
-      id:        Date.now().toString(),
-      firstName: trimmedFirst,
-      lastName:  trimmedLast
-    };
-
-    // Ajoute le participant dans la session
-    SessionService.getInstance().addParticipantToSession(this.sessionId, participant);
-
-    // Retour à la page de détail de session
-    Frame.topmost().navigate({
-      moduleName:   'views/session/session-detail-page',
-      context:      { sessionId: this.sessionId },
-      clearHistory: false,
-      transition:   { name: 'slide', duration: 200 }
-    });
+  // Getter pour binding
+  get results(): Array<TestResult & { formattedDate: string; tryNumber: number }> {
+    return this._results;
   }
 }
