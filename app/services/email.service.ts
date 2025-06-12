@@ -1,58 +1,79 @@
-// app/services/email.service.ts
-import { compose, ComposeOptions, Attachment } from '@nativescript/email';
-import { knownFolders, path, File } from '@nativescript/core';
-import { Session }    from '../models/session.model';
+import { knownFolders, File } from '@nativescript/core';
+import { compose, ComposeOptions } from 'nativescript-email';
+import { SessionService } from './session.service';
+import { ParticipantService } from './participant.service';
+import { TestService } from './test.service';
 import { TestResult } from '../models/test-result.model';
 
 export class EmailService {
-  // ───────── SINGLETON ──────────
-  private static _instance: EmailService;
-  static getInstance(): EmailService {
-    if (!this._instance) {
-      this._instance = new EmailService();
-    }
-    return this._instance;
-  }
-  private constructor() {}
+  private sessionSvc = SessionService.getInstance();
+  private participantSvc = ParticipantService.getInstance();
+  private testSvc = TestService.getInstance();
 
-  // ───────── API publique ───────
-  /** Exporte les résultats de session en CSV et ouvre le composer natif. */
-  async sendSessionResults(session: Session, results: TestResult[]): Promise<boolean> {
-    const csvPath = this.writeCsvToTemp(session, results);
+  /**
+   * Génère un CSV des résultats pour la session donnée.
+   * @param sessionId L'ID de la session à exporter.
+   * @returns Le chemin du fichier CSV généré.
+   */
+  private buildCsv(sessionId: string): string {
+    // Récupère tous les essais de la session
+    const allResults: TestResult[] = this.testSvc.getResults()
+      .filter(r => r.sessionId === sessionId);
 
-    const attachments: Attachment[] = [{
-      path: csvPath,
-      fileName: `results-${session.id}.csv`,
-      mimeType: 'text/csv',
-    }];
+    // Header
+    const header = ['Nom', 'Prénom', 'Phrase proposée', 'Phrase rédigée', 'Temps (ms)'].join(',');
 
-    const options: ComposeOptions = {
-      subject: `Résultats – ${session.name}`,
-      body:    'Veuillez trouver ci-joint les résultats au format CSV.',
-      to:      ['destinataire@example.com'],
-      attachments,
-    };
+    // Lignes
+    const lines = allResults.map(result => {
+      const participant = this.participantSvc.getParticipantById(result.participantId);
+      // Échapper les guillemets éventuels dans les phrases
+      const original = `"${result.originalText.replace(/"/g, '""')}"`;
+      const input    = `"${result.userInput.replace(/"/g, '""')}"`;
+      return [
+        participant.lastName,
+        participant.firstName,
+        original,
+        input,
+        result.timeTaken.toString()
+      ].join(',');
+    });
 
-    return compose(options);
-  }
+    const csvContent = [header, ...lines].join('\n');
 
-  // ───────── utilitaires privés ─
-  private writeCsvToTemp(session: Session, results: TestResult[]): string {
-    const csv = this.buildCsv(results);
-
-    const docs     = knownFolders.documents();
-    const fileName = `results-${session.id}.csv`;
-    const filePath = path.join(docs.path, fileName);
-    File.fromPath(filePath).writeTextSync(csv);
+    // Sauvegarde dans un fichier
+    const documents = knownFolders.documents();
+    const filePath = `${documents.path}/cogwalk-results-${sessionId}.csv`;
+    const file = File.fromPath(filePath);
+    file.writeText(csvContent);
 
     return filePath;
   }
 
-  private buildCsv(results: TestResult[]): string {
-    const header = ['participantId', 'score', 'date'].join(',');
-    const rows = results.map(r =>
-      [r.participantId, r.score, r.date.toISOString()].join(',')
-    );
-    return [header, ...rows].join('\n');
+  /**
+   * Compose et ouvre le mail avec le CSV en pièce jointe.
+   * @param sessionId L'ID de la session dont on veut exporter les résultats.
+   */
+  public async sendSessionResults(sessionId: string): Promise<void> {
+    const session = this.sessionSvc.getSessionById(sessionId);
+    const csvPath = this.buildCsv(sessionId);
+
+    const options: ComposeOptions = {
+      subject: `Résultats CogWalk – Session "${session.name}"`,
+      body: `Bonjour,\n\nVeuillez trouver en pièce jointe le rapport CSV des essais pour la session "${session.name}" du ${new Date(session.createdAt).toLocaleDateString()}.\n\nCordialement,\nL'équipe CogWalk.`,
+      to: [], // laisser vide pour saisie manuelle ou mettre une adresse par défaut
+      attachments: [
+        {
+          fileName: `cogwalk-results-${session.name}.csv`,
+          path: csvPath,
+          mimeType: 'text/csv',
+        }
+      ]
+    };
+
+    try {
+      await compose(options);
+    } catch (err) {
+      console.error('Échec de l’ouverture du composeur mail:', err);
+    }
   }
 }
