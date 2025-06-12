@@ -1,18 +1,23 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="onLoaded">
-  <StackLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<Page loaded="onLoaded" xmlns="http://schemas.nativescript.org/tns.xsd">
+  <ActionBar title="Test – Rédaction" />
+  <StackLayout class="p-4">
     <!-- Champ de saisie de la phrase -->
-    <TextField text="{{ userInput }}" hint="Rédigez la phrase ici..." />
+    <TextField text="{{ userInput }}" hint="Rédigez la phrase ici..." autocorrect="false" autocapitalizationType="none" />
 
-    <!-- Chrono affiché si besoin -->
-    <Label text="Temps écoulé: {{ displayTimer }}" />
+    <!-- Chronomètre affiché -->
+    <Label text="Temps écoulé: {{ displayTimer }}" class="mt-2 mb-4" />
 
-    <!-- Bouton terminer (premier clic) -->
-    <Button text="Terminer" tap="onFinishAttempt" />
+    <!-- Bouton Terminer (premier clic) -->
+    <Button text="Terminer" tap="onFinishAttempt" class="mb-2" />
 
-    <!-- Bouton nouvel essai, visible après l'enregistrement -->
-    <Button text="Nouvel essai" tap="onNewAttempt" visibility="{{ isNewAttemptVisible ? 'visible' : 'collapse' }}" />
+    <!-- Bouton Nouvel essai (visible après enregistrement) -->
+    <Button text="Nouvel essai" tap="onNewAttempt"
+            visibility="{{ isNewAttemptVisible ? 'visible' : 'collapse' }}"
+            class="mb-2" />
 
-    <!-- Bouton terminer le test, visible après l'enregistrement -->
-    <Button text="Terminer le test" tap="onCompleteTest" visibility="{{ isCompleteVisible ? 'visible' : 'collapse' }}" />
+    <!-- Bouton Terminer le test (visible après enregistrement) -->
+    <Button text="Terminer le test" tap="onCompleteTest"
+            visibility="{{ isCompleteVisible ? 'visible' : 'collapse' }}" />
   </StackLayout>
 </Page>
