@@ -6,9 +6,11 @@ import { TestService } from './test.service';
 import { TestResult } from '../models/test-result.model';
 
 export class EmailService {
-  private sessionSvc = SessionService.getInstance();
-  private participantSvc = ParticipantService.getInstance();
-  private testSvc = TestService.getInstance();
+  private static instance: EmailService;
+  static getInstance(): EmailService {
+    if (!this.instance) this.instance = new EmailService();
+    return this.instance;
+  }
 
   /**
    * Génère un CSV des résultats pour la session donnée.
