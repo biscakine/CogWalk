@@ -1,43 +1,45 @@
 import { Observable, Frame } from '@nativescript/core';
-import { SessionService } from '../../services/session.service';
-import { Participant }    from '../../models/participant.model';
+import { SessionService }    from '../../services/session.service';
+import { Participant }       from '../../models/participant.model';
 
 export class AddParticipantViewModel extends Observable {
-  private sessionService = SessionService.getInstance();
+  // Conserve l’ID de session pour l’ajout
   private sessionId: string;
 
+  // Bindables pour le deux-way binding sur les TextField
   public firstName = '';
   public lastName  = '';
 
   constructor(sessionId: string) {
     super();
     this.sessionId = sessionId;
-    // Initial property notifications
-    this.notifyPropertyChange('firstName', this.firstName);
-    this.notifyPropertyChange('lastName', this.lastName);
   }
 
-  /** Validation : prénom et nom non vides */
+  /** Active le bouton seulement si les deux champs sont remplis */
   get isValid(): boolean {
-    return this.firstName.trim().length > 0 && this.lastName.trim().length > 0;
+    return this.firstName.trim().length > 0 &&
+           this.lastName.trim().length  > 0;
   }
 
-  /** Appelé par le bouton "Ajouter" */
+  /** Appelé par le tap="{{ onAddParticipant }}" */
   public onAddParticipant(): void {
+    // Crée le participant
     const participant: Participant = {
       id:        Date.now().toString(),
       firstName: this.firstName.trim(),
       lastName:  this.lastName.trim()
     };
-    // Ajout du participant dans la session
-    this.sessionService.addParticipantToSession(this.sessionId, participant);
 
-    // Navigation retour vers la page de détail de session
+    // Ajoute à la session
+    SessionService.getInstance()
+      .addParticipantToSession(this.sessionId, participant);
+
+    // Retourne à la page de détails de session
     Frame.topmost().navigate({
-      moduleName: 'views/session/session-detail-page',
-      context:    { sessionId: this.sessionId },
+      moduleName:   'views/session/session-detail-page',
+      context:      { sessionId: this.sessionId },
       clearHistory: false,
-      transition: { name: 'slide', duration: 200 }
+      transition:   { name: 'slide', duration: 200 }
     });
   }
 }
