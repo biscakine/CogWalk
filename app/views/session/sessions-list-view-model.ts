@@ -81,7 +81,7 @@ export class SessionsListViewModel extends BaseViewModel {
         throw new Error("Aucun résultat à exporter pour cette session");
       }
 
-      await this.emailService.sendSessionResults(session, sessionResults);
+      await this.emailService.sendSessionResults(session.id);
       
       await alert({
         title: "Succès",
