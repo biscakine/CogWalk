@@ -24,16 +24,13 @@ export class TestInputViewModel extends Observable {
   private startTime: number;
   private timerInterval: any;
 
-  constructor(
-    private navigationContext: any,
-    private phrasesSvc: PhrasesService,
-    private testSvc: TestService
-  ) {
-    super();
-    // Récupère le timestamp du début de la rédaction
-    this.startTime = navigationContext.startTime;
-    this.startClock();
-  }
+  constructor(private ctx: any) {
+  super();
+  this.phrasesSvc = PhrasesService.getInstance();
+  this.testSvc    = TestService.getInstance();
+  this.startTime  = ctx.startTime;
+  this.startClock();
+}
 
   private startClock(): void {
     const update = () => {
