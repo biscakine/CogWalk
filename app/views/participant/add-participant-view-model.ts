@@ -1,12 +1,9 @@
-import { Observable, Frame } from '@nativescript/core';
-import { SessionService }    from '../../services/session.service';
-import { Participant }       from '../../models/participant.model';
+import { Observable, Frame, alert } from '@nativescript/core';
+import { SessionService }           from '../../services/session.service';
+import { Participant }              from '../../models/participant.model';
 
 export class AddParticipantViewModel extends Observable {
-  // Conserve l’ID de session pour l’ajout
   private sessionId: string;
-
-  // Bindables pour le deux-way binding sur les TextField
   public firstName = '';
   public lastName  = '';
 
@@ -15,26 +12,33 @@ export class AddParticipantViewModel extends Observable {
     this.sessionId = sessionId;
   }
 
-  /** Active le bouton seulement si les deux champs sont remplis */
   get isValid(): boolean {
     return this.firstName.trim().length > 0 &&
            this.lastName.trim().length  > 0;
   }
 
-  /** Appelé par le tap="{{ onAddParticipant }}" */
-  public onAddParticipant(): void {
-    // Crée le participant
+  public async onAddParticipant(): Promise<void> {
+    // 🔥 Debug alert
+    await alert({
+      title: 'DEBUG',
+      message: `Ajouter appelé :\n${this.firstName} ${this.lastName}`,
+      okButtonText: 'OK'
+    });
+
+    // Si on veut empêcher quand les champs sont vides
+    if (!this.isValid) {
+      await alert({ title: 'Erreur', message: 'Prénom et nom requis', okButtonText: 'OK' });
+      return;
+    }
+
     const participant: Participant = {
       id:        Date.now().toString(),
       firstName: this.firstName.trim(),
       lastName:  this.lastName.trim()
     };
+    SessionService.getInstance().addParticipantToSession(this.sessionId, participant);
 
-    // Ajoute à la session
-    SessionService.getInstance()
-      .addParticipantToSession(this.sessionId, participant);
-
-    // Retourne à la page de détails de session
+    // Navigue de retour
     Frame.topmost().navigate({
       moduleName:   'views/session/session-detail-page',
       context:      { sessionId: this.sessionId },
