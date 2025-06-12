@@ -1,76 +1,49 @@
-import { Frame } from '@nativescript/core';
-import { TestService } from '../../services/test.service';
-import { TestResult } from '../../models/test-result.model';
-import { Participant } from '../../models/participant.model';
-import { BaseViewModel } from '../base-view-model';
-import { formatFrenchDateTime } from '../../utils/date-formatter';
+import { Observable, Frame, alert } from '@nativescript/core';
+import { SessionService } from '../../services/session.service';
+import { Participant }    from '../../models/participant.model';
 
-interface ResultViewModel extends TestResult {
-    formattedDate: string;
-    tryNumber: number;
-}
+/** ViewModel pour la page "Ajouter un participant" */
+export class AddParticipantViewModel extends Observable {
+  private sessionId: string;
+  public firstName = '';
+  public lastName  = '';
 
-export class ParticipantResultsViewModel extends BaseViewModel {
-    private testService: TestService;
-    private _results: ResultViewModel[] = [];
-    private _participantName: string = '';
-    private participant: Participant;
+  constructor(sessionId: string) {
+    super();
+    this.sessionId = sessionId;
+  }
 
-    constructor(participant: Participant) {
-        super();
-        this.testService = TestService.getInstance();
-        this.participant = participant;
-        this._participantName = `${participant.firstName} ${participant.lastName}`;
-        this.loadResults();
-    }
+  /** Active le bouton seulement si les deux champs sont remplis */
+  get isValid(): boolean {
+    return this.firstName.trim().length > 0 && this.lastName.trim().length > 0;
+  }
 
-    get results(): ResultViewModel[] {
-        return this._results;
-    }
+  /** Méthode appelée par le bouton "Ajouter" */
+  public async onAddParticipant(): Promise<void> {
+    // Debug: montre une alert pour confirmer l'appel
+    await alert({
+      title: 'Debug',
+      message: `onAddParticipant appelé pour session ${this.sessionId}\nPrénom: ${this.firstName}\nNom: ${this.lastName}`,
+      okButtonText: 'OK'
+    });
 
-    get participantName(): string {
-        return this._participantName;
-    }
+    const trimmedFirst = this.firstName.trim();
+    const trimmedLast  = this.lastName.trim();
+    const participant: Participant = {
+      id:        Date.now().toString(),
+      firstName: trimmedFirst,
+      lastName:  trimmedLast
+    };
 
-    private loadResults() {
-        const participantId = `${this.participant.firstName}_${this.participant.lastName}`;
-        const allResults = this.testService.getResults();
-        
-        // Filter and sort results by timestamp in descending order
-        const sortedResults = allResults
-            .filter(result => result.participantId === participantId)
-            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Ajoute le participant dans la session
+    SessionService.getInstance().addParticipantToSession(this.sessionId, participant);
 
-        // Add try number to each result
-        this._results = sortedResults.map((result, index) => ({
-            ...result,
-            formattedDate: formatFrenchDateTime(new Date(result.timestamp)),
-            tryNumber: sortedResults.length - index // Reverse the index to start from the highest number
-        }));
-
-        this.notifyPropertyChange('results', this._results);
-    }
-
-    onNewTest() {
-        Frame.topmost().navigate({
-            moduleName: 'views/test/test-page',
-            context: { participant: this.participant },
-            clearHistory: false,
-            transition: {
-                name: 'slide',
-                duration: 200
-            }
-        });
-    }
-
-    onGoHome() {
-        Frame.topmost().navigate({
-            moduleName: 'views/home/home-page',
-            clearHistory: true,
-            transition: {
-                name: 'fade',
-                duration: 200
-            }
-        });
-    }
+    // Retour à la page de détail de session
+    Frame.topmost().navigate({
+      moduleName:   'views/session/session-detail-page',
+      context:      { sessionId: this.sessionId },
+      clearHistory: false,
+      transition:   { name: 'slide', duration: 200 }
+    });
+  }
 }
