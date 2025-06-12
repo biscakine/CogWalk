@@ -1,65 +1,30 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd"
-      navigatingTo="navigatingTo"
-      class="page">
-  <ActionBar class="header">
-    <NavigationButton text="Retour" android.systemIcon="ic_menu_back" />
-    <StackLayout>
-      <Label text="Détails de la session" class="title" />
-    </StackLayout>
-  </ActionBar>
-
-  <StackLayout class="content">
+<?xml version="1.0" encoding="utf-8"?>
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo">
+  <ActionBar title="Détail de la session" class="action-bar" />
+  <GridLayout rows="auto,*,auto" class="p-4">
     <!-- Informations de la session -->
-    <StackLayout class="session-item">
-      <Label text="{{ session.name }}" class="session-title" />
-      <Label text="{{ formattedDate }}" class="session-date" />
-
-      <Button text="Exporter les résultats"
-              tap="{{ onExportResults }}"
-              class="btn-gradient" />
+    <StackLayout row="0" class="mb-4">
+      <Label text="Nom de la session : {{ session.name }}" class="h2" />
+      <Label text="Créée le : {{ formattedDate }}" class="subheading" />
     </StackLayout>
 
-    <!-- Ajouter un participant -->
-    <Button text="Ajouter un participant"
-            tap="{{ onAddParticipant }}"
-            class="btn-gradient" />
-
-    <!-- Liste des participants -->
-    <ListView items="{{ session.participants }}"
-              class="session-list m-4"
-              itemTap="{{ onParticipantTap }}">
+    <!-- Liste des participants et leurs résultats -->
+    <ListView items="{{ participants }}" row="1" class="mb-4">
       <ListView.itemTemplate>
-        <StackLayout class="session-item">
-          <Label text="{{ firstName + ' ' + lastName }}"
-                 class="session-title" />
-        </StackLayout>
-      </ListView.itemTemplate>
-    </ListView>
-
-    <!-- Résultats des tests -->
-    <Label text="Résultats du test"
-           class="session-title text-center mt-4" />
-
-    <ListView items="{{ sessionResults }}"
-              class="session-list m-4">
-      <ListView.itemTemplate>
-        <GridLayout columns="2*, *, *" rows="auto"
-                    class="p-2 border-b">
-          <!-- Phrase originale -->
-          <Label col="0"
-                 text="{{ originalText }}"
-                 textWrap="true"
-                 class="session-info" />
-          <!-- Temps pris -->
-          <Label col="1"
-                 text="{{ timeTaken + ' s' }}"
-                 class="session-info text-center" />
-          <!-- Nombre d’erreurs -->
-          <Label col="2"
-                 text="{{ errorCount }}"
-                 class="session-info text-right" />
+        <GridLayout columns="*,auto" class="p-2">
+          <StackLayout col="0">
+            <Label text="{{ firstName }} {{ lastName }}" class="h3" />
+            <Label text="Essais : {{ resultCount }}" class="small-text" />
+          </StackLayout>
+          <Button text="Voir résultats" col="1" tap="onViewParticipantTap" />
         </GridLayout>
       </ListView.itemTemplate>
     </ListView>
-  </StackLayout>
+
+    <!-- Boutons d'action -->
+    <StackLayout row="2" orientation="horizontal" horizontalAlignment="center" spacing="12">
+      <Button text="Ajouter un participant" tap="onAddParticipantTap" />
+      <Button text="Exporter CSV" tap="onExportCsvTap" />
+    </StackLayout>
+  </GridLayout>
 </Page>
